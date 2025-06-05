@@ -4,8 +4,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { Dimensions, Image, Platform, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, Platform, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const userName = 'Lucas';
@@ -17,6 +18,40 @@ export default function HomeScreen() {
   const horizontalPadding = 20;
   const headerHeight = 160;
   const overlap = 32;
+  const posts = [
+    {
+      date: '29 May',
+      title: '🚨 [SCAM ALERT] Phishing emails',
+      description: "Email claiming to be from Singpass contains link to fake website phishing for user's email and password. 📨🔗",
+    },
+    {
+      date: '28 May',
+      title: '💼 [SCAM ALERT] Fake Job Offers',
+      description: "Scammers impersonate companies and offer fake jobs to collect personal information. 🕵️‍♂️📄",
+    },
+    {
+      date: '27 May',
+      title: '📦 [SCAM ALERT] Delivery Scam',
+      description: "SMS claims your parcel is held and asks for payment. Don't click suspicious links! 🚫📱",
+    },
+    {
+      date: '26 May',
+      title: '🏦 [SCAM ALERT] Bank Account Locked',
+      description: "Fake bank notifications asking to verify your account. Never share your OTP! 🔒🚷",
+    },
+    {
+      date: '25 May',
+      title: '🎁 [SCAM ALERT] Lottery Winner',
+      description: "You've won a lottery you never entered? It's a scam! Don't give out your details. 🎲❌",
+    },
+    {
+      date: '24 May',
+      title: '👮 [SCAM ALERT] Police Impersonation',
+      description: "Caller claims to be police and asks for money to avoid arrest. Hang up! ��📞",
+    },
+  ];
+
+  const router = useRouter();
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F7F8FA' }}>
@@ -67,26 +102,40 @@ export default function HomeScreen() {
           </ThemedView>
         </View>
 
-        {/* Scam Alert Card + Placeholder Image */}
-        <View style={[styles.alertRow, { paddingHorizontal: horizontalPadding, marginBottom: 18 }] }>
-          <ThemedView style={styles.alertCard}>
-            <ThemedText style={{ fontWeight: 'bold', fontSize: 15 }}>29 May</ThemedText>
-            <ThemedText type="subtitle" style={{ fontSize: 16, marginTop: 2 }}>
-              [SCAM ALERT] Phishing emails
-            </ThemedText>
-            <ThemedText style={{ marginTop: 2, fontSize: 14 }}>
-              Email claiming to be from Singpass contains link to fake website phishing for user's email and password....
-            </ThemedText>
-            <TouchableOpacity style={styles.seeMoreBtn}>
-              <ThemedText style={styles.seeMoreText}>See More</ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-          <ThemedView style={styles.alertCardPlaceholder}>
-            <Ionicons name="image" size={48} color="#b3d6f7" />
-          </ThemedView>
+        <View style={[styles.alertRow, { paddingHorizontal: horizontalPadding, marginBottom: 18 }]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {posts.map((post, idx) => (
+              <ThemedView key={idx} style={[styles.alertCard, { marginRight: 12, width: 260 }]}>
+                <ThemedText style={{ fontWeight: 'bold', fontSize: 15 }}>{post.date}</ThemedText>
+                <ThemedText type="subtitle" style={{ fontSize: 16, marginTop: 2 }}>
+                  {post.title}
+                </ThemedText>
+                <ThemedText style={{ marginTop: 2, fontSize: 14 }}>
+                  {post.description}
+                </ThemedText>
+                <TouchableOpacity 
+                  style={styles.seeMoreBtn}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/forum',
+                      params: {
+                        newPostTitle: post.title,
+                        newPostContent: post.description,
+                        newPostTags: JSON.stringify(['Verified by official sources', 'Scam Alert']),
+                      }
+                    });
+                  }}
+                >
+                  <ThemedText style={styles.seeMoreText}>See More</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            ))}
+            <ThemedView style={styles.alertCardPlaceholder}>
+              <Ionicons name="image" size={48} color="#b3d6f7" />
+            </ThemedView>
+          </ScrollView>
         </View>
 
-        {/* Learning Progress */}
         <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 8, marginLeft: horizontalPadding, fontSize: 18, fontWeight: '700' }}>Learning Progress</ThemedText>
         <ThemedView style={[styles.progressSection, { marginHorizontal: horizontalPadding, marginBottom: 18 }] }>
           {progress.map((item, idx) => (
@@ -111,7 +160,6 @@ export default function HomeScreen() {
           ))}
         </ThemedView>
 
-        {/* Shortcuts */}
         <ThemedView style={[styles.shortcutsCard, { marginHorizontal: horizontalPadding, marginBottom: 32 }] }>
           <ThemedText type="subtitle" style={{ marginBottom: 8, fontSize: 18, fontWeight: '700' }}>Shortcuts</ThemedText>
           <View style={styles.shortcutsRowAligned}>
