@@ -1,10 +1,87 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button, Modal, Platform } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
+import styles from '@/components/Styles';
 import { Ionicons } from "@expo/vector-icons";
+import { BarcodeScanningResult, Camera, CameraView } from "expo-camera";
+import * as DocumentPicker from "expo-document-picker";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, Button, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CameraView, Camera, BarcodeScanningResult } from "expo-camera";
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+const apiKey = "67b3d885b053d0a7bffa4f0a995c97b6d3faf9aea5c3630deeeffcd15d647a85"
+// import { VIRUSTOTAL_API_KEY } from '@env';
+async function scanUrl(url: string) {
+  try {
+    // Step 1: Submit URL for scanning
+    const postOptions = {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-apikey': apiKey
+      },
+      body: new URLSearchParams({ url }).toString(),
+    };
+
+    const postRes = await fetch('https://www.virustotal.com/api/v3/urls', postOptions);
+    const postJson = await postRes.json();
+    console.log(postJson)
+
+    if (!postJson.data?.id) {
+      Alert.alert("Error", "Failed to get job ID");
+      return null;
+    }
+
+    const jobID = postJson.data.id;
+    console.log("JOB ID", jobID);
+
+    // Step 2: Fetch result using jobID
+    const getOptions = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        'x-apikey': apiKey
+      }
+    };
+
+    // NOTE: For URL analysis, VT expects the URL id to be "base64url" encoded; 
+    // if you already get the id from POST, use as is.
+    const getRes = await fetch(`https://www.virustotal.com/api/v3/analyses/${jobID}`, getOptions);
+    const getJson = await getRes.json();
+
+    Alert.alert("Submitted");
+    console.log(getJson);
+
+    return getJson;
+  } catch (err) {
+    Alert.alert("Error", err?.toString() ?? "Unknown error");
+    return null;
+  }
+}
+
+async function submitScanJob(url: string) {
+  console.log(url)
+  try {
+    const options = {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-apikey': "67b3d885b053d0a7bffa4f0a995c97b6d3faf9aea5c3630deeeffcd15d647a85"
+      },
+      body: new URLSearchParams({ url: url }).toString()
+    };
+
+    const res = await fetch('https://www.virustotal.com/api/v3/urls', options);
+    const json = await res.json();
+    
+    Alert.alert("Submitted")
+    console.log("JOB ID TEST")
+    console.log(json["data"]["id"])
+    return json["data"]["id"].toString();
+  } catch (err) {
+    return null;
+  }
+}
+
+
 
 export default function DetectScreen() {
   const insets = useSafeAreaInsets();
@@ -40,7 +117,20 @@ export default function DetectScreen() {
     scanningRef.current = true;
     setScanned(true);
     setScannerVisible(false);
-    alert(`Bar code of type ${result.type} and data ${result.data} has been scanned!`);
+    Alert.alert("Scan Successful", `The extracted url is ${result.data}`,
+      [ {
+        text: "Start Detecting",
+        onPress: () => {console.log("Detecting...")},
+        style: "default"
+      },
+      {
+        text: "Cancel",
+        onPress: () => {
+          console.log("User cancelled.");
+        },
+        style: "cancel"
+      }]
+    );
     setTimeout(() => {
       scanningRef.current = false;
     }, 1000);
@@ -54,18 +144,15 @@ export default function DetectScreen() {
   }
 
   return (
-    <ParallaxScrollView
-            headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-            headerImage={<View />}
-    >
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView>
       <Text style={styles.title}>Detect Scam</Text>
       <Text style={styles.subtitle}>Insert a URL or domain</Text>
       <TextInput
         value={url}
         onChangeText={setUrl}
         placeholder="https://example.com"
-        style={styles.input}
+        style={styles.smallInput}
         placeholderTextColor="#bbb"
       />
 
@@ -84,8 +171,8 @@ export default function DetectScreen() {
       </TouchableOpacity>
 
       {/* Submit Button */}
-      <TouchableOpacity style={styles.submitBtn}>
-        <Text style={styles.submitBtnText}>Submit</Text>
+      <TouchableOpacity style={styles.submitBtn} onPress={() => scanUrl(url)}>
+        <Text style={styles.submitBtnText} >Submit</Text>
       </TouchableOpacity>
 
       <Text style={styles.altText}>
@@ -124,111 +211,7 @@ export default function DetectScreen() {
           </View>
         </View>
       </Modal>
+      </ScrollView>
     </View>
-    </ParallaxScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#232042",
-    marginTop: 8,
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "#63606C",
-    marginBottom: 6,
-  },
-  input: {
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1.2,
-    borderColor: "#eee",
-    backgroundColor: "#F7F8FA",
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  uploadBox: {
-    borderStyle: "dashed",
-    borderWidth: 1.2,
-    borderColor: "#ddd",
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    marginBottom: 10,
-    backgroundColor: "#fafaff",
-    marginTop: 2,
-  },
-  uploadText: {
-    fontSize: 15,
-    color: "#232042",
-    marginBottom: 2,
-    fontWeight: "500",
-  },
-  supportedFilesText: {
-    fontSize: 12,
-    color: "#aaa",
-    marginBottom: 2,
-  },
-  selectedFileText: {
-    fontSize: 13,
-    color: "#6A8DFF",
-    marginTop: 2,
-  },
-  submitBtn: {
-    backgroundColor: "#6A8DFF",
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginTop: 5,
-    marginBottom: 18,
-    shadowColor: "#6A8DFF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 3,
-    elevation: 2,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  submitBtnText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  altText: {
-    alignSelf: "center",
-    color: "#888",
-    fontSize: 15,
-    marginBottom: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(30,30,30,0.85)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  camera: {
-    width: 320,
-    height: 400,
-    borderRadius: 20,
-    overflow: "hidden",
-    marginBottom: 30,
-  },
-  modalActions: {
-    position: "absolute",
-    bottom: 60,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-});
