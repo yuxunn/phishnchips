@@ -1,13 +1,11 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import styles from '@/components/Styles';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Dimensions, Image, Platform, StatusBar, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import styles from '@/components/Styles';
+import { Dimensions, Image, Platform, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const userName = 'Lucas';
@@ -92,7 +90,7 @@ export default function HomeScreen() {
         <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 8, marginLeft: horizontalPadding, fontSize: 18, fontWeight: '700' }}>Learning Progress</ThemedText>
         <ThemedView style={[styles.progressSection, { marginHorizontal: horizontalPadding, marginBottom: 18 }] }>
           {progress.map((item, idx) => (
-            <View key={item.label} style={styles.progressItemRow}>
+            <View key={`${idx}-${item.label}`} style={styles.progressItemRow}>
               <View style={styles.progressItemLeft}>
                 <View style={styles.circleProgress}>
                   <View style={{
