@@ -248,6 +248,16 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     height: 300,
     fontSize: 16,
+    marginBottom: 18
+  },
+  inputTransparent: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    marginLeft: 8,
+    color: '#222',
   },
   attachButton: {
     paddingVertical: 8,

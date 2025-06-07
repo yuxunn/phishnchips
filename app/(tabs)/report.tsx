@@ -1,12 +1,13 @@
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import styles from '@/components/Styles';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActionSheetIOS, Alert, Image, Linking, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Image, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReportScreen() {
+  const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{ uri: string; name?: string; type?: string } | null>(null);
@@ -90,11 +91,8 @@ export default function ReportScreen() {
   const POLICE_REPORT_URL = "https://eservices1.police.gov.sg/phub/eservices/landingpage/police-report"
 
   return (
-    <ParallaxScrollView
-                headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-                headerImage={<View />}
-    >
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView>
       <Text style={styles.title}>Report</Text>
       <View style={styles.infoBox}>
         <Text style={styles.subtitle}>
@@ -150,7 +148,8 @@ export default function ReportScreen() {
       <TouchableOpacity style={styles.submitBtn} onPress={submitReport}>
               <Text style={styles.submitBtnText}>Submit</Text>
       </TouchableOpacity>
+      </ScrollView>
     </View>
-    </ParallaxScrollView>
+    
   );
 }

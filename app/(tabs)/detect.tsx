@@ -1,10 +1,9 @@
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import styles from '@/components/Styles';
 import { Ionicons } from "@expo/vector-icons";
 import { BarcodeScanningResult, Camera, CameraView } from "expo-camera";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Button, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Button, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 const apiKey = "67b3d885b053d0a7bffa4f0a995c97b6d3faf9aea5c3630deeeffcd15d647a85"
 // import { VIRUSTOTAL_API_KEY } from '@env';
@@ -118,7 +117,20 @@ export default function DetectScreen() {
     scanningRef.current = true;
     setScanned(true);
     setScannerVisible(false);
-    alert(`Bar code of type ${result.type} and data ${result.data} has been scanned!`);
+    Alert.alert("Scan Successful", `The extracted url is ${result.data}`,
+      [ {
+        text: "Start Detecting",
+        onPress: () => {console.log("Detecting...")},
+        style: "default"
+      },
+      {
+        text: "Cancel",
+        onPress: () => {
+          console.log("User cancelled.");
+        },
+        style: "cancel"
+      }]
+    );
     setTimeout(() => {
       scanningRef.current = false;
     }, 1000);
@@ -132,11 +144,8 @@ export default function DetectScreen() {
   }
 
   return (
-    <ParallaxScrollView
-            headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-            headerImage={<View />}
-    >
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView>
       <Text style={styles.title}>Detect Scam</Text>
       <Text style={styles.subtitle}>Insert a URL or domain</Text>
       <TextInput
@@ -202,7 +211,7 @@ export default function DetectScreen() {
           </View>
         </View>
       </Modal>
+      </ScrollView>
     </View>
-    </ParallaxScrollView>
   );
 }
