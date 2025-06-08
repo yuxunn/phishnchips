@@ -1,41 +1,37 @@
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+// app/_layout.tsx
 import React from 'react';
-import 'react-native-reanimated';
-import { AuthProvider, useAuth } from '../auth-context';
-
-function AppStack() {
-  const { isLoggedIn } = useAuth();
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {!isLoggedIn && <Stack.Screen name="auth/login" />}
-      {!isLoggedIn && <Stack.Screen name="auth/signup" />}
-      {isLoggedIn && <Stack.Screen name="(tabs)" />}
-      <Stack.Screen name="+not-found" />
-    </Stack>
-  );
-}
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperProvider } from 'react-native-paper';
+import {
+  ThemeProvider,
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
+} from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from '../auth-context';  
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  const scheme = useColorScheme() ?? 'light';
+  const navigationTheme =
+    scheme === 'dark' ? NavigationDarkTheme : NavigationDefaultTheme;
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AppStack />
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <ThemeProvider value={navigationTheme}>
+      <PaperProvider theme={navigationTheme}>
+       <AuthProvider>                           
+          <SafeAreaView style={{ flex: 1 }}>
+            <Stack
+              initialRouteName="auth"
+              screenOptions={{ headerShown: false }}
+            >
+              <Stack.Screen name="auth"/>
+              <Stack.Screen name="(tabs)"/>
+              <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
+            </Stack>
+          </SafeAreaView>
+      </AuthProvider>
+      </PaperProvider>
+    </ThemeProvider>
   );
 }

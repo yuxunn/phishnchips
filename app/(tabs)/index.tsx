@@ -5,11 +5,24 @@ import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebaseConfig'; 
 import { Dimensions, Image, Platform, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  const userName = 'Lucas';
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      if (user) {
+        setUserName(user.displayName ?? user.email ?? '');
+      } else {
+        setUserName('');
+      }
+    });
+    return unsubscribe;
+  }, []);
   const progress = [
     { label: 'Fake News and Misinformation', value: 4, total: 5 },
     { label: 'Safe Social Media Practices', value: 6, total: 24 },
@@ -70,9 +83,12 @@ export default function HomeScreen() {
         end={{ x: 1, y: 0 }}
       >
         <View style={{ flex: 1, justifyContent: 'center' }}>
-          <ThemedText type="title" style={styles.headerText}>
-            Welcome back,{"\n"}{userName}
-          </ThemedText>
+        <ThemedText type="title" style={styles.headerText}>
+  {userName
+    ? `Welcome back,\n${userName}`
+    : 'Welcome!'}
+</ThemedText>
+
         </View>
         <Image
           source={{ uri: 'https://ui-avatars.com/api/?name=Lucas&background=6A8DFF&color=fff' }}
