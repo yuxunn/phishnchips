@@ -75,7 +75,7 @@ export default function HomeScreen() {
               [SCAM ALERT] Phishing emails
             </ThemedText>
             <ThemedText style={{ marginTop: 2, fontSize: 14 }}>
-              Email claiming to be from Singpass contains link to fake website phishing for user's email and password....
+              Email claiming to be from Singpass contains link to fake website phishing for users email and password....
             </ThemedText>
             <TouchableOpacity style={styles.seeMoreBtn}>
               <ThemedText style={styles.seeMoreText}>See More</ThemedText>

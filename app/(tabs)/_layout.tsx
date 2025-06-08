@@ -69,6 +69,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color }: { color: string }) => <MaterialIcons name="account-circle" size={24} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="post/[id]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
