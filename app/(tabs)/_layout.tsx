@@ -75,6 +75,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="post/createpost"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

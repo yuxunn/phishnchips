@@ -37,12 +37,19 @@ export default function CreatePostScreen() {
 
   const handleCreatePost = (post: Post) => {
     POSTS.unshift(post);
-    router.back();
   };
   
   return (
     <View style={styles.container}>
-      <CreatePostForm onPost={handleCreatePost} onClose={() => router.back()} />
+      <CreatePostForm
+  onPost={handleCreatePost}
+  onClose={() => router.push('/forum')}
+  currentUser={{
+    name: 'Robert Tan',
+    avatar: '🧑', // or a URL if you have  one
+  }}
+/>
+
     </View>
   );
 }
