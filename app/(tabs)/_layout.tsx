@@ -81,6 +81,24 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="learn/part"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="learn/badges"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="learn/lesson"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

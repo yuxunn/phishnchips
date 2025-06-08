@@ -79,7 +79,7 @@ export default function PostDetailsScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 44}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.push('/forum')} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color="#232042" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Post</Text>
