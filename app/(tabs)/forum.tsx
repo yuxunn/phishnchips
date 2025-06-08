@@ -1,6 +1,6 @@
 import { CreatePostForm } from '@/components/CreatePost';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,6 +60,7 @@ const NOTIFICATIONS = [
 export default function ForumScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [tab, setTab] = useState<'posts' | 'notifications'>('posts');
   const [selectedFilter, setSelectedFilter] = useState('latest');
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -91,6 +92,27 @@ export default function ForumScreen() {
 
     setPosts(prevPosts => [newPost, ...prevPosts]);
   };
+
+  React.useEffect(() => {
+    if (
+      params.newPostTitle &&
+      params.newPostContent &&
+      params.newPostTags &&
+      !posts.some(
+        (p) =>
+          p.title === params.newPostTitle &&
+          p.content === params.newPostContent
+      )
+    ) {
+      handleCreatePost({
+        title: params.newPostTitle as string,
+        content: params.newPostContent as string,
+        tags: JSON.parse(params.newPostTags as string),
+        anonymous: false,
+      });
+      setSelectedFilter('verified');
+    }
+  }, [params]);
 
   const filteredAndSortedPosts = React.useMemo(() => {
     let filtered = [...posts];
