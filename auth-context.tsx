@@ -28,7 +28,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await AsyncStorage.setItem('isLoggedIn', value ? 'true' : 'false');
     } catch {
-      // ignore write errors
     }
   };
 
