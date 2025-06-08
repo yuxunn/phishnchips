@@ -112,7 +112,7 @@ export default function HomeScreen() {
               <TextInput
                 placeholder="Write what happened..."
                 placeholderTextColor="#bbb"
-                style={styles.input}
+                style={styles.inputTransparent}
               />
             </View>
           </ThemedView>

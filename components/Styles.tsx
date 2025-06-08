@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-
 const styles = StyleSheet.create({
   gradientHeaderRefactored: {
     flexDirection: 'row',
@@ -44,15 +43,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     marginTop: 4,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    marginLeft: 8,
-    color: '#222',
   },
   alertRow: {
     flexDirection: 'row',
@@ -186,6 +176,202 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  uploadBox: {
+    borderStyle: "dashed",
+    borderWidth: 1.2,
+    borderColor: "#ddd",
+    borderRadius: 16,
+    padding: 10,
+    alignItems: "center",
+    marginBottom: 10,
+    backgroundColor: "#fafaff",
+    marginTop: 2,
+  },
+  uploadText: {
+    fontSize: 15,
+    color: "#232042",
+    marginBottom: 2,
+    fontWeight: "500",
+  },
+  supportedFilesText: {
+    fontSize: 12,
+    color: "#aaa",
+    marginBottom: 2,
+  },
+  selectedFileText: {
+    fontSize: 13,
+    color: "#6A8DFF",
+    marginTop: 2,
+  },
+  container: {
+    flex: 1,
+    padding: 24,
+    gap: 16,
+    backgroundColor: '#fafbfc',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#232042",
+    marginTop: 8,
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 12,
+    color: "grey",
+  },
+  blackSubtitle: {
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  link: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontWeight: "bold",
+    textDecorationLine: "underline"
+  },
+  warning: {
+    fontSize: 16,
+    marginBottom: 8,
+    color:"#a01919",
+  },
+  infoBox: {
+    backgroundColor: "#E2F1FB",
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 15,
+    marginBottom: 18,
+  },
+  // input: {
+  //   borderWidth: 1,
+  //   borderColor: '#bbb',
+  //   borderRadius: 5,
+  //   paddingHorizontal: 12,
+  //   backgroundColor: 'transparent',
+  //   textAlignVertical: 'top',
+  //   height: 300,
+  //   fontSize: 16,
+  //   marginBottom: 18
+  // },
+  input: {
+  borderWidth: 1.5,
+  borderColor: "#eee",
+  borderRadius: 16,            
+  paddingHorizontal: 18,
+  paddingTop: 22,
+  paddingBottom: 18,
+  backgroundColor: "#F7F8FA", 
+  textAlignVertical: "top",
+  minHeight: 100,
+  maxHeight: 220,
+  fontSize: 16,
+  color: "#232042",
+  marginBottom: 18,
+  elevation: 4,                  // for Android shadow
+  // Optional: Add a border glow on focus if using a custom wrapper
+  // borderColor: isFocused ? "#745ff2" : "#dad7f5",
+},
+  smallInput: {
+      height: 44,
+      borderRadius: 12,
+      borderWidth: 1.2,
+      borderColor: "#eee",
+      backgroundColor: "#F7F8FA",
+      paddingHorizontal: 16,
+      fontSize: 16,
+      marginBottom: 12,
+    },
+
+  inputTransparent: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    marginLeft: 8,
+    color: '#222',
+  },
+  attachButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  attachmentBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f0f2f5',
+    borderRadius: 8,
+    padding: 10,
+  },
+  attachmentName: {
+    flex: 1,
+    color: '#555',
+    fontSize: 15,
+  },
+  removeAttachment: {
+    color: '#d00',
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  attachmentImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  attachmentIcon: {
+    fontSize: 28,
+    marginRight: 10,
+  },
+  submitBtn: {
+    backgroundColor: "#3D5CFF",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 5,
+    marginBottom: 18,
+    shadowColor: "#3D5CFF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.14,
+    shadowRadius: 3,
+    elevation: 2,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  submitBtnText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  
+  altText: {
+    alignSelf: "center",
+    color: "#888",
+    fontSize: 15,
+    marginBottom: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(30,30,30,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  camera: {
+    width: 320,
+    height: 400,
+    borderRadius: 20,
+    overflow: "hidden",
+    marginBottom: 30,
+  },
+  modalActions: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  }
 }); 
 
 export default styles;

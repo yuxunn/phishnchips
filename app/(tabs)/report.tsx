@@ -1,15 +1,19 @@
+import styles from '@/components/Styles';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ActionSheetIOS, Alert, Button, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Image, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReportScreen() {
+  const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
+  const [fileName, setFileName] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{ uri: string; name?: string; type?: string } | null>(null);
 
   // Pick an image from library
-  const pickImage = async () => {
+  const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission denied', 'Please allow access to your photos.');
@@ -31,19 +35,14 @@ export default function ReportScreen() {
   };
 
   // Pick a PDF/document
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'application/pdf',
-      copyToCacheDirectory: true,
-    });
-    if (!result.canceled) {
-      const file = result.assets[0]
-      setAttachment({
-        uri: file.uri,
-        name: file.name,
-        type: 'application/pdf',
+  const handlePickDocument = async () => {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "image/*", "application/vnd.microsoft.portable-executable"], // pdf, jpg, png, exe
+        copyToCacheDirectory: true,
       });
-    }
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setFileName(result.assets[0].name);
+      }
   };
 
   // Open action sheet (iOS) or simple prompt (Android)
@@ -55,8 +54,8 @@ export default function ReportScreen() {
           cancelButtonIndex: 0,
         },
         (buttonIndex) => {
-          if (buttonIndex === 1) pickImage();
-          if (buttonIndex === 2) pickDocument();
+          if (buttonIndex === 1) handlePickImage();
+          if (buttonIndex === 2) handlePickDocument();
         }
       );
     } else {
@@ -65,8 +64,8 @@ export default function ReportScreen() {
         'Select File Type',
         '',
         [
-          { text: 'Image', onPress: pickImage },
-          { text: 'PDF', onPress: pickDocument },
+          { text: 'Image', onPress: handlePickImage },
+          { text: 'PDF', onPress: handlePickDocument },
           { text: 'Cancel', style: 'cancel' },
         ]
       );
@@ -89,31 +88,36 @@ export default function ReportScreen() {
     setAttachment(null);
   };
 
+  const POLICE_REPORT_URL = "https://eservices1.police.gov.sg/phub/eservices/landingpage/police-report"
+
   return (
-    <ParallaxScrollView
-                headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-                headerImage={<View />}
-    >
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <ScrollView
+        contentContainerStyle={{
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 12
+       }}>
       <Text style={styles.title}>Report</Text>
       <View style={styles.infoBox}>
-        <Text style={styles.subtitle}>
+        <Text style={styles.blackSubtitle}>
           Saw a potential scam? Submit a report and we will alert the relevant authorities to review it
         </Text>
-        <Text style={styles.subtitle}>
-          *Reports submitted here are NOT official police reports. If you have fallen for a scam, please file an official police report
+        <Text style={styles.warning}>
+          *Reports submitted here are NOT official police reports. 
+          If you have fallen for a scam, please file an official police report{' '}
+          <Text style={styles.link} onPress={() => Linking.openURL(POLICE_REPORT_URL)}>here</Text>.
         </Text>
       </View>
-
+      <Text style={styles.subtitle}>Details (max. 200 words)</Text>
       <TextInput
-        style={[styles.input, { minHeight: 80, maxHeight: 160 }]}
+        style={[styles.input, { minHeight: 180, maxHeight: 250, paddingTop: 20, lineHeight: 20 }]}
         value={input}
         onChangeText={setInput}
-        placeholder="Describe the scam or suspicious activity"
+        placeholder=""
         multiline
       />
-
       {/* Attachment preview */}
+      <Text style={styles.subtitle}>Attachment</Text>
       <View style={{ marginBottom: 12 }}>
         {attachment ? (
           <View style={styles.attachmentBox}>
@@ -128,82 +132,26 @@ export default function ReportScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity onPress={pickAttachment} style={styles.attachButton}>
-            <Text style={{ color: '#007bff', fontWeight: '500' }}>Attach File</Text>
+          
+          <TouchableOpacity
+            style={styles.uploadBox}
+            onPress={handlePickDocument}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="attach-file" size={20} color="#bbb" style={{ marginBottom: 4 }} />
+            <Text style={styles.supportedFilesText}>Supported files: .pdf, .jpg, .png, .exe</Text>
+            {fileName && (
+              <Text style={styles.selectedFileText}>{fileName}</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
 
-      <Button title="Submit Report" onPress={submitReport} />
+      <TouchableOpacity style={styles.submitBtn} onPress={submitReport}>
+              <Text style={styles.submitBtnText}>Submit</Text>
+      </TouchableOpacity>
+      </ScrollView>
     </View>
-    </ParallaxScrollView>
+    
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 16,
-    backgroundColor: '#fafbfc',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#232042",
-    marginTop: 8,
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  infoBox: {
-    backgroundColor: "#E2F1FB",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 18,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#bbb',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    textAlignVertical: 'top',
-    fontSize: 16,
-  },
-  attachButton: {
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  attachmentBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#f0f2f5',
-    borderRadius: 8,
-    padding: 10,
-  },
-  attachmentName: {
-    flex: 1,
-    color: '#555',
-    fontSize: 15,
-  },
-  removeAttachment: {
-    color: '#d00',
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  attachmentImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    marginRight: 10,
-  },
-  attachmentIcon: {
-    fontSize: 28,
-    marginRight: 10,
-  },
-});
