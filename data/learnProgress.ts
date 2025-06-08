@@ -23,4 +23,9 @@ export function isPartCompleted(lessonId: string, partId: string): boolean {
 
 export function resetProgress() {
   progress = {};
+}
+
+export function isLessonCompleted(lessonId: string, totalParts: number): boolean {
+  const progress = getProgress(lessonId);
+  return Object.keys(progress).length === totalParts;
 } 

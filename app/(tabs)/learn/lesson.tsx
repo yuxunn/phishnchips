@@ -1,18 +1,34 @@
 import { ThemedText } from '@/components/ThemedText';
 import { lessons } from '@/data/learnContent';
 import { getProgress, isPartCompleted } from '@/data/learnProgress';
+import { getSavedLessons, setSavedLesson } from '@/data/savedLessons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function LessonDetailScreen() {
   const { id } = useLocalSearchParams();
   const lesson = lessons.find(l => l.id === id);
-  const [saved, setSaved] = useState(lesson?.saved ?? false);
+  const [saved, setSaved] = useState(false);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const [progress, setProgress] = useState(() => getProgress(id as string));
   const router = useRouter();
+
+  // Load saved state on mount
+  useEffect(() => {
+    const loadSavedState = async () => {
+      const savedLessons = await getSavedLessons();
+      setSaved(savedLessons[id as string] ?? false);
+    };
+    loadSavedState();
+  }, [id]);
+
+  const handleSave = async () => {
+    const newSavedState = !saved;
+    setSaved(newSavedState);
+    await setSavedLesson(id as string, newSavedState);
+  };
 
   if (!lesson) {
     return <ThemedText>Lesson not found</ThemedText>;
@@ -44,7 +60,7 @@ export default function LessonDetailScreen() {
         {/* Header with image and title */}
         <View style={styles.header}>
           <View style={styles.headerBackButton}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity onPress={() => router.push('/learn')} style={styles.backButton}>
               <MaterialIcons name="arrow-back" size={24} color="#232042" />
             </TouchableOpacity>
           </View>
@@ -107,7 +123,7 @@ export default function LessonDetailScreen() {
 
       {/* Save and Start buttons - Fixed at bottom */}
       <View style={styles.saveStartRow}>
-        <TouchableOpacity onPress={() => setSaved(s => !s)} style={[styles.saveButton, saved && styles.saveButtonActive]}>
+        <TouchableOpacity onPress={handleSave} style={[styles.saveButton, saved && styles.saveButtonActive]}>
           <ThemedText style={styles.saveButtonIcon}>{saved ? '★' : '☆'}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.startButton} onPress={handleStartLesson}>

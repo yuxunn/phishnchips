@@ -4,7 +4,7 @@ import { isPartCompleted, setPartCompleted } from '@/data/learnProgress';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Image, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function LessonPartScreen() {
   const { lessonId, partId } = useLocalSearchParams();
@@ -12,46 +12,35 @@ export default function LessonPartScreen() {
   const part = lesson?.parts.find(p => p.id === partId);
   const router = useRouter();
   const [completed, setCompleted] = useState(() => isPartCompleted(lessonId as string, partId as string));
-  const [scrolledToBottom, setScrolledToBottom] = useState(false);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [scrollViewHeight, setScrollViewHeight] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    // Reset scroll state when part changes
-    setScrolledToBottom(false);
+    // Reset completed state when part changes
     setCompleted(isPartCompleted(lessonId as string, partId as string));
   }, [lessonId, partId]);
-
-  useEffect(() => {
-    // If content fits the screen, enable Next immediately
-    if (contentHeight > 0 && scrollViewHeight > 0 && contentHeight <= scrollViewHeight + 1) {
-      setScrolledToBottom(true);
-    }
-  }, [contentHeight, scrollViewHeight]);
 
   if (!lesson || !part) {
     return <ThemedText>Lesson part not found</ThemedText>;
   }
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 32; // px
-    if (
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - paddingToBottom
-    ) {
-      setScrolledToBottom(true);
-    }
-  };
-
   const handleNext = () => {
-    setPartCompleted(lesson.id, part.id);
-    setCompleted(true);
     const currentIndex = lesson.parts.findIndex(p => p.id === partId);
     const nextPart = lesson.parts[currentIndex + 1];
+    
     if (nextPart) {
+      setPartCompleted(lesson.id, part.id);
+      setCompleted(true);
       router.push({ pathname: '/learn/part', params: { lessonId, partId: nextPart.id } });
+      // Scroll to top after navigation
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+      }, 100);
+    } else {
+      // If it's the last part, go back to lesson page
+      setPartCompleted(lesson.id, part.id);
+      setCompleted(true);
+      router.push({ pathname: '/learn/lesson', params: { id: lessonId } });
+      //router.back();
     }
   };
 
@@ -60,10 +49,6 @@ export default function LessonPartScreen() {
       <ScrollView
         style={styles.scrollView}
         ref={scrollViewRef}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        onContentSizeChange={(w, h) => setContentHeight(h)}
-        onLayout={(e: LayoutChangeEvent) => setScrollViewHeight(e.nativeEvent.layout.height)}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -115,11 +100,13 @@ export default function LessonPartScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.navButton, styles.nextButton, (!scrolledToBottom || completed) && styles.nextButtonDisabled]}
+          style={[styles.navButton, styles.nextButton, completed && styles.nextButtonDisabled]}
           onPress={handleNext}
-          disabled={lesson.parts.findIndex(p => p.id === partId) === lesson.parts.length - 1 || !scrolledToBottom || completed}
+          //disabled={completed}
         >
-          <ThemedText style={styles.navButtonText}>Next</ThemedText>
+          <ThemedText style={styles.navButtonText}>
+            {lesson.parts.findIndex(p => p.id === partId) === lesson.parts.length - 1 ? 'Complete' : 'Next'}
+          </ThemedText>
           <MaterialIcons name="arrow-forward" size={24} color="#232042" />
         </TouchableOpacity>
       </View>

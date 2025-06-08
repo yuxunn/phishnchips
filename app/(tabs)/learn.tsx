@@ -1,7 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { Lesson, lessons as lessonsData } from '@/data/learnContent';
+import { isLessonCompleted } from '@/data/learnProgress';
+import { getSavedLessons } from '@/data/savedLessons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function LearnScreen() {
@@ -10,6 +12,15 @@ export default function LearnScreen() {
     const [savedLessons, setSavedLessons] = useState<{[id: string]: boolean}>({});
     const [filteredLessons, setFilteredLessons] = useState<Lesson[]>(lessonsData);
     const router = useRouter();
+
+    // Load saved lessons on mount
+    useEffect(() => {
+        const loadSavedLessons = async () => {
+            const saved = await getSavedLessons();
+            setSavedLessons(saved);
+        };
+        loadSavedLessons();
+    }, []);
 
     // Merge saved state into lessons
     const lessons: Lesson[] = lessonsData.map((lesson: Lesson) => ({ ...lesson, saved: savedLessons[lesson.id] ?? lesson.saved }));
@@ -72,16 +83,19 @@ export default function LearnScreen() {
                 </TouchableOpacity>
             </View>
             <FlatList
-                data={lessons}
+                data={lessons.filter(lesson => isLessonCompleted(lesson.id, lesson.parts.length))}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={item => item.id}
                 style={styles.badgesList}
-                renderItem={({ item }) => (
-                    <View style={styles.badgeItem}>
-                        <Image source={item.image} style={styles.badgeImage} />
-                        <ThemedText style={styles.badgeLabel}>{item.title}</ThemedText>
-                    </View>
+                renderItem={({ item: lesson }) => (
+                    <TouchableOpacity 
+                        style={styles.badgeItem}
+                        onPress={() => router.push({ pathname: './learn/lesson', params: { id: lesson.id } })}
+                    >
+                        <Image source={lesson.image} style={styles.badgeImage} />
+                        <ThemedText style={styles.badgeLabel}>{lesson.title}</ThemedText>
+                    </TouchableOpacity>
                 )}
             />
 

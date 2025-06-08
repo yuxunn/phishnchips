@@ -1,17 +1,23 @@
 import { ThemedText } from '@/components/ThemedText';
 import { lessons } from '@/data/learnContent';
+import { isLessonCompleted } from '@/data/learnProgress';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function BadgesScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <ThemedText style={styles.title}>All Badges</ThemedText>
-      {lessons.map(lesson => (
-        <View key={lesson.id} style={styles.badgeItem}>
-          <Image source={lesson.image} style={styles.badgeImage} />
-          <ThemedText style={styles.badgeLabel}>{lesson.title}</ThemedText>
-        </View>
-      ))}
+      <ThemedText style={styles.title}>Badges Earned</ThemedText>
+      {lessons.map(lesson => {
+        const isCompleted = isLessonCompleted(lesson.id, lesson.parts.length);
+        if (!isCompleted) return null;
+        
+        return (
+          <View key={lesson.id} style={styles.badgeItem}>
+            <Image source={lesson.image} style={styles.badgeImage} />
+            <ThemedText style={styles.badgeLabel}>{lesson.title}</ThemedText>
+          </View>
+        );
+      })}
     </ScrollView>
   );
 }
