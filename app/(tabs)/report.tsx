@@ -3,7 +3,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActionSheetIOS, Alert, Image, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Image, Linking, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReportScreen() {
@@ -11,7 +11,16 @@ export default function ReportScreen() {
   const [input, setInput] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{ uri: string; name?: string; type?: string } | null>(null);
-
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = () => {
+  setRefreshing(true);
+    setInput('');
+    setFileName(null);
+    setAttachment(null);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
   // Pick an image from library
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -96,7 +105,10 @@ export default function ReportScreen() {
         contentContainerStyle={{
         paddingBottom: insets.bottom + 24,
         paddingHorizontal: 12
-       }}>
+       }}
+       refreshControl={
+           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+       >
       <Text style={styles.title}>Report</Text>
       <View style={styles.infoBox}>
         <Text style={styles.blackSubtitle}>
