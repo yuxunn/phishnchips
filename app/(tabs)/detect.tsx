@@ -7,7 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BarcodeScanningResult, Camera, CameraView } from "expo-camera";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Button, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Button, Modal, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function DetectScreen() {
@@ -23,6 +23,31 @@ export default function DetectScreen() {
   const [detectedScamMsg, setDetectedScamMsg] = useState<string | null>(null);
   const [isDetectedScamMsg, setIsDetectedScamMsg] = useState<boolean | null>(false);
   const [isLoading, setIsLoading] = useState<boolean | null>(false);
+  const [isScannedText, setIsScannedText] = useState<boolean | null>(false);
+  const [trustedScannedTextMsg, setTrustedScannedTextMsg] = useState<string | null>(null);
+  const [scamScannedTextMsg, setScamScannedTextMsg] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = () => {
+  setRefreshing(true);
+  
+  // Reset all your states
+  setUrl("");
+  setTextInput("");
+  setFileName(null);
+  setFile(null);
+  setDetectedScamMsg(null);
+  setIsDetectedScamMsg(false);
+  setIsLoading(false);
+  setIsScannedText(false);
+  setTrustedScannedTextMsg(null);
+  setScamScannedTextMsg(null);
+
+  // Any delay or async logic if needed
+  setTimeout(() => {
+    setRefreshing(false);
+  }, 500); 
+};
+
 
   // File picker handler
   const handlePickDocument = async () => {
@@ -86,7 +111,10 @@ export default function DetectScreen() {
         contentContainerStyle={{
         paddingBottom: insets.bottom + 24,
         paddingHorizontal: 12
-       }}>
+       }}
+       refreshControl={
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
         <Text style={styles.title}>Detect Scam</Text>
         <Text style={styles.blackSubtitle}>
           Choose one of the following methods to detect a potential scam:
@@ -104,6 +132,8 @@ export default function DetectScreen() {
         <TouchableOpacity
           style={styles.submitBtn}
           onPress={() => {
+            setIsScannedText(false);
+            setIsDetectedScamMsg(false);
             if (url) {
               scanUrl(url, setDetectedScamMsg, setIsDetectedScamMsg, setIsLoading);
             } else {
@@ -132,6 +162,7 @@ export default function DetectScreen() {
           <TouchableOpacity
           style={styles.submitBtn}
           onPress={() => {
+            setIsDetectedScamMsg(false);
             if (file) {
               scanFile(file, setDetectedScamMsg, setIsDetectedScamMsg, setIsLoading);
             } else {
@@ -154,8 +185,10 @@ export default function DetectScreen() {
         <TouchableOpacity
           style={styles.submitBtn}
           onPress={() => {
+            setIsDetectedScamMsg(false);
+            setIsScannedText(false);
             if(textInput) {
-              scanText(textInput, setDetectedScamMsg, setIsDetectedScamMsg, setIsLoading)
+              scanText(textInput, setTrustedScannedTextMsg, setScamScannedTextMsg, setIsScannedText, setIsLoading)
             } else {
               Alert.alert("Input required", "Please enter the text to proceed with the scan.");
             }
@@ -231,6 +264,41 @@ export default function DetectScreen() {
             )
 
         ) : null}
+
+         {/* Combined message for Scan Text */}
+        {isScannedText ? (
+          scamScannedTextMsg !== null || trustedScannedTextMsg !== null ? (
+          <View>
+              {scamScannedTextMsg ? 
+              <View>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10, marginHorizontal: 10 }}>
+                <MaterialIcons name="warning" size={28} color="#F36C5E" style={{ marginRight: 8 }} />
+                <Text style={{ color: "#F36C5E", fontSize: 18, fontWeight: "bold"}}>
+                  {scamScannedTextMsg}
+                </Text>
+              </View>
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ color: "black", fontSize: 16, fontWeight: "bold", lineHeight: 25 }}>
+                  Next steps:{"\n"}
+                  1. Help protect others! Visit the Report tab to report this scam.{"\n"}
+                  2. Share this information with others on the Forum.
+                </Text>
+              </View>
+              </View>
+              : ""}
+              
+              {trustedScannedTextMsg ? 
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10, marginHorizontal: 10 }}>
+                <Ionicons name="shield-checkmark" size={28} color="#4FE87C" style={{ marginRight: 8 }} />
+                <Text style={{ color: "#4FE87C", fontSize: 18, fontWeight: "bold"}}>
+                  {trustedScannedTextMsg}
+                </Text>
+              </View> : 
+              ""}
+              
+          </View>
+            ) : null
+             ) : null}
       </ScrollView>
     </View>
   );

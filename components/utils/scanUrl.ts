@@ -43,7 +43,7 @@ export async function scanUrl(url: string, setDetectedScamMsg: (msg: string) => 
     url_id = url_id.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     let getAnalysisJson = null
     let getAnalysisResponse = await fetch(`https://www.virustotal.com/api/v3/analyses/${jobID}`, getAnalysisOptions);
-    Alert.alert("Submitted");
+    // Alert.alert("Submitted");
     setIsLoading(true);
     const maxRetries = 3;
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
