@@ -1,24 +1,24 @@
+import { Post } from '@/data/posts'; // adjust import path to your Post type
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    FlatList,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type CreatePostFormProps = {
   onClose: () => void;
-  onPost?: (post: {
-    title: string;
-    content: string;
-    tags: string[];
-    anonymous: boolean;
-  }) => void;
+  onPost?: (post: Post) => void;
+  currentUser?: {
+    name: string;
+    avatar: string;
+  };
 };
 
 const AVAILABLE_TAGS = [
@@ -32,7 +32,7 @@ const AVAILABLE_TAGS = [
   'Social Media Scam',
 ];
 
-export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
+export function CreatePostForm({ onClose, onPost, currentUser }: CreatePostFormProps) {
   const [title, setTitle] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
@@ -56,32 +56,38 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
-    
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!content.trim()) {
-      newErrors.content = 'Content is required';
-    }
-    if (selectedTags.length === 0) {
-      newErrors.tags = 'Please select at least one tag';
-    }
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!content.trim()) newErrors.content = 'Content is required';
+    if (selectedTags.length === 0) newErrors.tags = 'Please select at least one tag';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handlePost = () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    onPost?.({
+    const newPost: Post = {
+      id: Math.random().toString(36).substring(2, 10),
+      user: {
+        name: anonymous ? 'Anonymous' : currentUser?.name ?? 'Guest',
+        avatar: anonymous ? '👤' : currentUser?.avatar ?? '🧑',
+        tags: selectedTags,
+      },
+
+      //tags: selectedTags,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
       title,
       content,
-      tags: selectedTags,
-      anonymous,
-    });
+
+      stats: {
+        likes: 0,
+        comments: 0,
+      },
+      comments: []
+    };
+    onPost?.(newPost);
     onClose();
   };
 
@@ -99,26 +105,19 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
         value={title}
         onChangeText={(text) => {
           setTitle(text);
-          if (errors.title) {
-            setErrors(prev => ({ ...prev, title: undefined }));
-          }
+          if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
         }}
         placeholderTextColor="#B2B6C8"
       />
       {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
       <Text style={styles.label}>Tags</Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.tagInput, errors.tags && styles.inputError]}
         onPress={() => setShowTagDropdown(true)}
       >
         <Text style={styles.tagInputText}>Select tags</Text>
-        <MaterialIcons
-          name="arrow-drop-down"
-          size={24}
-          color="#B2B6C8"
-          style={styles.tagIcon}
-        />
+        <MaterialIcons name="arrow-drop-down" size={24} color="#B2B6C8" style={styles.tagIcon} />
       </TouchableOpacity>
 
       <View style={styles.tagContainer}>
@@ -139,20 +138,17 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
         animationType="fade"
         onRequestClose={() => setShowTagDropdown(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowTagDropdown(false)}
         >
           <View style={styles.dropdownContainer}>
             <FlatList
-              data={AVAILABLE_TAGS.filter(tag => !selectedTags.includes(tag))}
+              data={AVAILABLE_TAGS.filter((tag) => !selectedTags.includes(tag))}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => addTag(item)}
-                >
+                <TouchableOpacity style={styles.dropdownItem} onPress={() => addTag(item)}>
                   <Text style={styles.dropdownItemText}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -168,10 +164,9 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
         value={content}
         onChangeText={(text) => {
           setContent(text);
-          if (errors.content) {
-            setErrors(prev => ({ ...prev, content: undefined }));
-          }
+          if (errors.content) setErrors((prev) => ({ ...prev, content: undefined }));
         }}
+        maxLength={300}
         multiline
         numberOfLines={8}
         placeholderTextColor="#B2B6C8"
@@ -179,26 +174,15 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
       {errors.content && <Text style={styles.errorText}>{errors.content}</Text>}
 
       <View style={styles.anonymousBox}>
-        <TouchableOpacity
-          onPress={() => setAnonymous(!anonymous)}
-          style={styles.checkboxWrapper}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              anonymous && { backgroundColor: '#6A8DFF' },
-            ]}
-          >
-            {anonymous && (
-              <MaterialIcons name="check" size={16} color="#fff" />
-            )}
+        <TouchableOpacity onPress={() => setAnonymous(!anonymous)} style={styles.checkboxWrapper}>
+          <View style={[styles.checkbox, anonymous && { backgroundColor: '#6A8DFF' }]}>
+            {anonymous && <MaterialIcons name="check" size={16} color="#fff" />}
           </View>
         </TouchableOpacity>
         <Text style={styles.anonymousText}>
           I wish to remain anonymous.{' '}
           <Text style={styles.noteText}>
-            Do note that this might reduce post credibility. Users are
-            encouraged to display name for forum posts.
+            Do note that this might reduce post credibility. Users are encouraged to display name for forum posts.
           </Text>
         </Text>
       </View>
@@ -213,6 +197,7 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

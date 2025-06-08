@@ -1,4 +1,4 @@
-import { CreatePostForm } from '@/components/CreatePost';
+
 import { POSTS, Post } from '@/data/posts';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -23,37 +23,12 @@ export default function ForumScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'posts' | 'notifications'>('posts');
   const [selectedFilter, setSelectedFilter] = useState('latest');
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [posts, setPosts] = useState<Post[]>(POSTS);
   
   // Add current user state - in a real app, this would come from your auth system
   const [currentUser] = useState({ name: 'Robert Tan' });
 
-  const handleCreatePost = (postData: {
-    title: string;
-    content: string;
-    tags: string[];
-    anonymous: boolean;
-  }) => {
-    const newPost: Post = {
-      id: String(Date.now()), // Use timestamp as ID to ensure uniqueness
-      user: {
-        name: postData.anonymous ? 'Anonymous User' : currentUser.name,
-        avatar: '🧑🏻',
-        tags: postData.tags,
-      },
-      time: 'Just now',
-      timestamp: Date.now(),
-      title: postData.title,
-      content: postData.content,
-      stats: { likes: 0, comments: 0 },
-    };
-
-    setPosts((prevPosts: Post[]) => [newPost, ...prevPosts]);
-    // Update the shared POSTS array
-    POSTS.unshift(newPost);
-  };
 
   const filteredAndSortedPosts = React.useMemo(() => {
     let filtered = [...posts];
@@ -103,9 +78,6 @@ export default function ForumScreen() {
     });
   };
 
-  if (showCreateForm) {
-    return <CreatePostForm onClose={() => setShowCreateForm(false)} onPost={handleCreatePost} />;
-  }
 
   return (
     <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>  
@@ -142,7 +114,7 @@ export default function ForumScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.plusBtn}
-                onPress={() => setShowCreateForm(true)}
+                onPress={() => router.push('/post/createpost')}
               >
                 <MaterialIcons name="add" size={22} color="#232042" />
               </TouchableOpacity>

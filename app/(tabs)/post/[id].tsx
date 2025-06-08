@@ -6,122 +6,7 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableO
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Mock comments data for initial posts only
-const INITIAL_COMMENTS: Record<string, Comment[]> = {
-  '1': [
-    {
-      id: '1',
-      user: { name: 'Sarah Tan', avatar: '👩🏻' },
-      content: 'Thanks for sharing! I received this too. The link definitely looks suspicious.',
-      time: '04:35 pm',
-      likes: 5,
-    },
-    {
-      id: '2',
-      user: { name: 'Alex Wong', avatar: '🧑🏻' },
-      content: 'CPF will never send SMS with links. Always verify through official CPF website.',
-      time: '04:40 pm',
-      likes: 8,
-    },
-    {
-      id: '3',
-      user: { name: 'Michelle Lee', avatar: '👩🏻' },
-      content: 'I reported this to the police. They confirmed it\'s a known scam.',
-      time: '04:45 pm',
-      likes: 12,
-    },
-    {
-      id: '4',
-      user: { name: 'David Chen', avatar: '🧑🏻' },
-      content: 'Good catch! Everyone should be aware of these scams.',
-      time: '04:50 pm',
-      likes: 3,
-    },
-    {
-      id: '5',
-      user: { name: 'Emma Lim', avatar: '👩🏻' },
-      content: 'I almost clicked the link. Thanks for the warning!',
-      time: '04:55 pm',
-      likes: 6,
-    },
-  ],
-  '2': [
-    {
-      id: '1',
-      user: { name: 'John Tan', avatar: '🧑🏻' },
-      content: 'This happened to me too! The seller asked for OTP claiming it was for "verification".',
-      time: '04:35 pm',
-      likes: 4,
-    },
-    {
-      id: '2',
-      user: { name: 'Lisa Ng', avatar: '👩🏻' },
-      content: 'Never share OTP with anyone, even if they claim to be from the platform.',
-      time: '04:40 pm',
-      likes: 7,
-    },
-  ],
-  '3': [
-    {
-      id: '1',
-      user: { name: 'Peter Wong', avatar: '🧑🏻' },
-      content: 'You can use QR code scanners that check for malicious links before opening them.',
-      time: '04:35 pm',
-      likes: 9,
-    },
-    {
-      id: '2',
-      user: { name: 'Rachel Lee', avatar: '👩🏻' },
-      content: 'If it seems too good to be true, it probably is. Better to be safe than sorry.',
-      time: '04:40 pm',
-      likes: 5,
-    },
-    {
-      id: '3',
-      user: { name: 'Tommy Chen', avatar: '🧑🏻' },
-      content: 'I use Google Lens to scan QR codes - it shows the URL before opening.',
-      time: '04:45 pm',
-      likes: 3,
-    },
-  ],
-  '4': [
-    {
-      id: '1',
-      user: { name: 'Sophie Lim', avatar: '👩🏻' },
-      content: 'These job scams are getting more sophisticated. Always verify the company.',
-      time: '12:05 am',
-      likes: 6,
-    },
-    {
-      id: '2',
-      user: { name: 'Kevin Tan', avatar: '🧑🏻' },
-      content: 'I received a similar message. The company name was slightly different from the real one.',
-      time: '12:10 am',
-      likes: 4,
-    },
-    {
-      id: '3',
-      user: { name: 'Grace Wong', avatar: '👩🏻' },
-      content: 'Report these to the police. They have a dedicated team for job scams.',
-      time: '12:15 am',
-      likes: 8,
-    },
-    {
-      id: '4',
-      user: { name: 'Daniel Lee', avatar: '🧑🏻' },
-      content: 'Legitimate companies will never ask for payment to start work.',
-      time: '12:20 am',
-      likes: 5,
-    },
-    {
-      id: '5',
-      user: { name: 'Amanda Chen', avatar: '👩🏻' },
-      content: 'Check the company\'s registration number on ACRA before proceeding.',
-      time: '12:25 am',
-      likes: 7,
-    },
-  ],
-};
+
 
 type Comment = {
   id: string;
@@ -139,10 +24,16 @@ export default function PostDetailsScreen() {
   const insets = useSafeAreaInsets();
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>(INITIAL_COMMENTS[id as keyof typeof INITIAL_COMMENTS] || []);
 
   // Find the post from the shared POSTS array
   const post = POSTS.find((p: Post) => p.id === id);
+  console.log(post);
+  const [comments, setComments] = useState<Comment[]>(post?.comments || []);
+
+  React.useEffect(() => {
+    setComments(post?.comments || []);
+  }, [post?.comments]);
+  
 
   if (!post) {
     return (
