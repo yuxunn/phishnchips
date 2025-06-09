@@ -5,7 +5,6 @@ const apiKey = VIRUSTOTAL_API_KEY
 
 export async function scanUrl(url: string, setDetectedScamMsg: (msg: string) => void, setIsDetectedScamMsg: (value: boolean) => void, setIsLoading: (isLoading: boolean) => void) {
   try {
-    // Step 1: Submit URL for scanning
     const submitJobOptions = {
       method: 'POST',
       headers: {
@@ -28,7 +27,6 @@ export async function scanUrl(url: string, setDetectedScamMsg: (msg: string) => 
     const jobID = submitJobJson.data.id;
     console.log("JOB ID", jobID);
 
-    // Step 2: Fetch result using jobID
     const getAnalysisOptions = {
       method: 'GET',
       headers: {
@@ -43,7 +41,7 @@ export async function scanUrl(url: string, setDetectedScamMsg: (msg: string) => 
     url_id = url_id.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     let getAnalysisJson = null
     let getAnalysisResponse = await fetch(`https://www.virustotal.com/api/v3/analyses/${jobID}`, getAnalysisOptions);
-    // Alert.alert("Submitted");
+
     setIsLoading(true);
     const maxRetries = 3;
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
