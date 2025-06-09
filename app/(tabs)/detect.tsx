@@ -7,7 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BarcodeScanningResult, Camera, CameraView } from "expo-camera";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Button, Modal, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Button, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function DetectScreen() {
@@ -27,6 +27,20 @@ export default function DetectScreen() {
   const [trustedScannedTextMsg, setTrustedScannedTextMsg] = useState<string | null>(null);
   const [scamScannedTextMsg, setScamScannedTextMsg] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (isScannedText && (trustedScannedTextMsg || scamScannedTextMsg)) {
+      setModalVisible(true);
+    }
+  }, [isScannedText, trustedScannedTextMsg, scamScannedTextMsg]);
+
+  useEffect(() => {
+    if (isDetectedScamMsg && detectedScamMsg) {
+      setModalVisible(true);
+    }
+  }, [isDetectedScamMsg, detectedScamMsg]);
+
   const onRefresh = () => {
   setRefreshing(true);
   
@@ -104,6 +118,8 @@ export default function DetectScreen() {
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
+
+  
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
@@ -238,8 +254,15 @@ export default function DetectScreen() {
         )}
         {isDetectedScamMsg ? (
           detectedScamMsg !== null && detectedScamMsg.startsWith("Beware") ? (
-            <View>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10 }}>
+            <Modal
+              visible={modalVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setModalVisible(false)}
+            >
+            <View style={styles.modalOverlay}>
+              <View style={styles.singleModalContent}>
+              <View style={styles.messageModal}>
                 <MaterialIcons name="warning" size={28} color="#F36C5E" style={{ marginRight: 8 }} />
                 <Text style={{ color: "#F36C5E", fontSize: 18, fontWeight: "bold", textAlign: "center" }}>
                   {detectedScamMsg}
@@ -251,27 +274,54 @@ export default function DetectScreen() {
                   1. Help protect others! Visit the Report tab to report this scam.{"\n"}
                   2. Share this information with others on the Forum.
                 </Text>
+              <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Close</Text>
+              </Pressable>
               </View>
+              </View>
+              
             </View>
+            </Modal>
           )
             : (
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10 }}>
+              <Modal
+              visible={modalVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+              <View style={styles.singleModalContent}>
+                <View style={styles.messageModal}>
                 <Ionicons name="shield-checkmark" size={28} color="#4FE87C" style={{ marginRight: 8 }} />
                 <Text style={{ color: "#4FE87C", fontSize: 18, fontWeight: "bold", textAlign: "center" }}>
                   {detectedScamMsg}
                 </Text>
+                </View>
+                <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Close</Text>
+              </Pressable>
               </View>
+              
+              </View>
+              </Modal>
             )
 
         ) : null}
 
          {/* Combined message for Scan Text */}
+         <Modal
+            visible={modalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setModalVisible(false)}
+          >
         {isScannedText ? (
           scamScannedTextMsg !== null || trustedScannedTextMsg !== null ? (
-          <View>
+          <View style={styles.modalOverlay}>
               {scamScannedTextMsg ? 
-              <View>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10, marginHorizontal: 10 }}>
+              <View style={styles.modalContent}>
+              <View style={styles.messageModal}>
                 <MaterialIcons name="warning" size={28} color="#F36C5E" style={{ marginRight: 8 }} />
                 <Text style={{ color: "#F36C5E", fontSize: 18, fontWeight: "bold"}}>
                   {scamScannedTextMsg}
@@ -288,17 +338,25 @@ export default function DetectScreen() {
               : ""}
               
               {trustedScannedTextMsg ? 
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginVertical: 10, marginHorizontal: 10 }}>
+              
+              <View style={styles.modalContent}>
+                <View style={styles.messageModal}>
                 <Ionicons name="shield-checkmark" size={28} color="#4FE87C" style={{ marginRight: 8 }} />
                 <Text style={{ color: "#4FE87C", fontSize: 18, fontWeight: "bold"}}>
                   {trustedScannedTextMsg}
                 </Text>
+                </View>
+                 <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>Close</Text>
+                </Pressable>
               </View> : 
               ""}
+              
               
           </View>
             ) : null
              ) : null}
+             </Modal>
       </ScrollView>
     </View>
   );
