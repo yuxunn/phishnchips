@@ -1,6 +1,6 @@
-import { EMAIL_CHECKER_API_KEY } from "@env";
+//import { EMAIL_CHECKER_API_KEY } from "@env";
 import { Alert } from "react-native";
-const apiKey = EMAIL_CHECKER_API_KEY
+const apiKey = process.env.EMAIL_CHECKER_API_KEY
 
 
 export async function scanEmail(email: string, setDetectedScamMsg: (msg: string) => void, setIsDetectedScamMsg: (value: boolean) => void, setIsLoading: (isLoading: boolean) => void) {

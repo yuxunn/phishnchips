@@ -1,6 +1,6 @@
-import { VIRUSTOTAL_API_KEY } from "@env";
+//import { VIRUSTOTAL_API_KEY } from "@env";
 import { Alert } from "react-native";
-const apiKey = VIRUSTOTAL_API_KEY
+const apiKey = process.env.VIRUSTOTAL_API_KEY
 
 
 export async function scanUrl(url: string, setDetectedScamMsg: (msg: string) => void, setIsDetectedScamMsg: (value: boolean) => void, setIsLoading: (isLoading: boolean) => void) {
