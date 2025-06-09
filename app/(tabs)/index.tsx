@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { Alert, Dimensions, Image, Modal, Platform, Pressable, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Image, Linking, Modal, Platform, Pressable, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
 
 export default function HomeScreen() {
@@ -245,16 +245,19 @@ export default function HomeScreen() {
           <ThemedText type="subtitle" style={{ marginBottom: 8, fontSize: 18, fontWeight: '700' }}>Shortcuts</ThemedText>
           <View style={styles.shortcutsRowAligned}>
             <View style={styles.shortcutIconWrapAligned}>
-              <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/SGSecure_logo.png' }} style={styles.shortcutIconAligned} />
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.sgsecure.sg/')}>
+                <Image source={require('../../assets/images/sgsecure-logo.jpg')} style={styles.shortcutIconAligned} />
+              </TouchableOpacity>
               <ThemedText style={styles.shortcutLabel}>SGSecure</ThemedText>
             </View>
+
             <View style={styles.shortcutIconWrapAligned}>
-              <Ionicons name="shield" size={48} color="#6A8DFF" style={styles.shortcutIconAligned} />
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.scamshield.org.sg/')}>
+                <Image source={require('../../assets/images/scamshield-logo.png')} style={styles.shortcutIconAligned} />
+              </TouchableOpacity>
               <ThemedText style={styles.shortcutLabel}>ScamShield</ThemedText>
             </View>
-            <View style={styles.shortcutIconWrapAligned}>
-              <Ionicons name="people" size={48} color="#6A8DFF" style={styles.shortcutIconAligned} />
-            </View>
+            
           </View>
         </ThemedView>
       </ParallaxScrollView>

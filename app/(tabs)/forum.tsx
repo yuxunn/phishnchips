@@ -2,7 +2,7 @@ import { CreatePostForm } from '@/components/CreatePost';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const FILTERS = [
@@ -168,6 +168,11 @@ export default function ForumScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>  
+    <ScrollView
+            contentContainerStyle={{
+            paddingBottom: insets.bottom + 24,
+            paddingHorizontal: 12
+           }}>
       <Text style={styles.title}>Forum</Text>
       <View style={styles.tabRow}>
         <TouchableOpacity onPress={() => setTab('posts')} style={styles.tabBtn}>
@@ -212,6 +217,7 @@ export default function ForumScreen() {
             keyExtractor={item => item.id}
             style={{ marginTop: 8 }}
             showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
             renderItem={({ item }) => (
               <TouchableOpacity 
                 style={styles.postCard}
@@ -279,6 +285,7 @@ export default function ForumScreen() {
           )}
         />
       )}
+      </ScrollView>
     </View>
   );
 }
