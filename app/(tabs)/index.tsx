@@ -5,24 +5,30 @@ import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; 
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, Platform, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../firebaseConfig';
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState<string>('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       if (user) {
         setUserName(user.displayName ?? user.email ?? '');
+        setIsAuthenticated(true);
       } else {
         setUserName('');
+        setIsAuthenticated(false);
+        router.replace('/auth/login'); 
       }
     });
     return unsubscribe;
   }, []);
+
+ 
   const progress = [
     { label: 'Fake News and Misinformation', value: 4, total: 5 },
     { label: 'Safe Social Media Practices', value: 6, total: 24 },
@@ -66,8 +72,8 @@ export default function HomeScreen() {
 
   const router = useRouter();
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#F7F8FA' }}>
+  return (isAuthenticated ? 
+      (<View style={{ flex: 1, backgroundColor: '#F7F8FA' }}>
       {/* Gradient Welcome Header */}
       <LinearGradient
         colors={["#6A8DFF", "#8F6AFF"]}
@@ -193,6 +199,7 @@ export default function HomeScreen() {
           </View>
         </ThemedView>
       </ParallaxScrollView>
-    </View>
+    </View>) : null
+    
   );
 }
