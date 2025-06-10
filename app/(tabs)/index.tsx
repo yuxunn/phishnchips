@@ -5,10 +5,10 @@ import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; 
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, Platform, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../firebaseConfig';
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState<string>('');
@@ -67,7 +67,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F7F8FA' }}>
+    <View style={{ flex: 1, backgroundColor: '#F7F8FA', marginBottom: 12}}>
       {/* Gradient Welcome Header */}
       <LinearGradient
         colors={["#6A8DFF", "#8F6AFF"]}
@@ -97,11 +97,12 @@ export default function HomeScreen() {
       </LinearGradient>
 
       <ParallaxScrollView
+      
         headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
         headerImage={<View />}
       >
         {/* Saw a Scam Card - Overlapping the header */}
-        <View style={{ alignItems: 'center', marginTop: -overlap, marginBottom: 18, zIndex: 2 }}>
+        <View style={{ alignItems: 'center', marginBottom: 18, zIndex: 2 }}>
           <ThemedView style={[styles.scamCardRefactored, { width: screenWidth - horizontalPadding * 2 }]}>
             <ThemedText type="subtitle" style={{ marginBottom: 2, fontSize: 18, fontWeight: '700' }}>Saw a Scam?</ThemedText>
             <ThemedText style={{ color: '#888', marginBottom: 8, fontSize: 15 }}>
