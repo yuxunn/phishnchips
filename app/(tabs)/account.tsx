@@ -1,25 +1,22 @@
-
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import React from 'react';
-import {
-  SafeAreaView,
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../firebaseConfig';
+import React from 'react';
+import {
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useAuth } from '../../auth-context';
+import { auth } from '../../firebaseConfig';
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, user } = useAuth();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -28,11 +25,11 @@ export default function AccountScreen() {
   };
 
   const menu = [
-    { label: 'Favourite', onPress: () => {} },
-    { label: 'Edit Account', onPress: () => {} },
-    { label: 'Settings and Privacy', onPress: () => {} },
-    { label: 'View Badges Earned', onPress: () => {} },
-    { label: 'Help', onPress: () => {} },
+    //{ label: 'Favourite', onPress: () => {} },
+    { label: 'Edit Account', onPress: () => router.push('/account/edit') },
+    //{ label: 'Settings and Privacy', onPress: () => {} },
+    { label: 'View Badges Earned', onPress: () => {router.push('./learn/badges')} },
+    //{ label: 'Help', onPress: () => {} },
   ];
 
   return (
@@ -45,9 +42,7 @@ export default function AccountScreen() {
             source={require('../../assets/male.png')}
             style={styles.avatar}
           />
-          <TouchableOpacity style={styles.editBadge}>
-            <Ionicons name="camera" size={20} color="#fff" />
-          </TouchableOpacity>
+          <Text style={styles.userName}>{user?.displayName || user?.email || 'User'}</Text>
         </View>
 
         {/* Menu items */}
@@ -131,5 +126,12 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#FF3B30',
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+    textAlign: 'center',
   },
 });

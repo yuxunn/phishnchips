@@ -1,12 +1,21 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { auth } from './firebaseConfig';
 
-interface AuthContextType {
+type AuthContextType = {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
-}
+  user: User | null;
+  setUser: (user: User | null) => void;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  isLoggedIn: false,
+  setIsLoggedIn: () => {},
+  user: null,
+  setUser: () => {},
+});
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -14,6 +23,19 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedInState] = useState(false);
+  const [user, setUserState] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUserState(user);
+      setIsLoggedInState(!!user);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     (async () => {
       const value = await AsyncStorage.getItem('isLoggedIn');
@@ -31,17 +53,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const setUser = (user: User | null) => {
+    setUserState(user);
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, user, setUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
