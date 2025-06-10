@@ -3,7 +3,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActionSheetIOS, Alert, Image, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Image, Linking, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReportScreen() {
@@ -11,7 +11,16 @@ export default function ReportScreen() {
   const [input, setInput] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{ uri: string; name?: string; type?: string } | null>(null);
-
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = () => {
+  setRefreshing(true);
+    setInput('');
+    setFileName(null);
+    setAttachment(null);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
   // Pick an image from library
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -91,30 +100,36 @@ export default function ReportScreen() {
   const POLICE_REPORT_URL = "https://eservices1.police.gov.sg/phub/eservices/landingpage/police-report"
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <ScrollView
+        contentContainerStyle={{
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 12
+       }}
+       refreshControl={
+           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+       >
       <Text style={styles.title}>Report</Text>
       <View style={styles.infoBox}>
-        <Text style={styles.subtitle}>
+        <Text style={styles.blackSubtitle}>
           Saw a potential scam? Submit a report and we will alert the relevant authorities to review it
         </Text>
         <Text style={styles.warning}>
           *Reports submitted here are NOT official police reports. 
-          If you have fallen for a scam, please file an{' '}
-          <Text style={styles.link} onPress={() => Linking.openURL(POLICE_REPORT_URL)}>official police report</Text>.
+          If you have fallen for a scam, please file an official police report{' '}
+          <Text style={styles.link} onPress={() => Linking.openURL(POLICE_REPORT_URL)}>here</Text>.
         </Text>
       </View>
-
+      <Text style={styles.subtitle}>Details (max. 200 words)</Text>
       <TextInput
-        style={[styles.input, { minHeight: 80, maxHeight: 160, paddingTop: 20, lineHeight: 20 }]}
+        style={[styles.input, { minHeight: 180, maxHeight: 250, paddingTop: 20, lineHeight: 20 }]}
         value={input}
         onChangeText={setInput}
-        placeholder="Describe the incident or suspicious activity you want to report"
+        placeholder=""
         multiline
-        
       />
-
       {/* Attachment preview */}
+      <Text style={styles.subtitle}>Attachment</Text>
       <View style={{ marginBottom: 12 }}>
         {attachment ? (
           <View style={styles.attachmentBox}>
@@ -136,7 +151,6 @@ export default function ReportScreen() {
             activeOpacity={0.8}
           >
             <MaterialIcons name="attach-file" size={20} color="#bbb" style={{ marginBottom: 4 }} />
-            <Text style={styles.uploadText}>Upload suspicious email / text message / file</Text>
             <Text style={styles.supportedFilesText}>Supported files: .pdf, .jpg, .png, .exe</Text>
             {fileName && (
               <Text style={styles.selectedFileText}>{fileName}</Text>
