@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-
 const styles = StyleSheet.create({
   gradientHeaderRefactored: {
     flexDirection: 'row',
@@ -182,7 +181,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: "#ddd",
     borderRadius: 16,
-    padding: 20,
+    padding: 10,
     alignItems: "center",
     marginBottom: 10,
     backgroundColor: "#fafaff",
@@ -215,12 +214,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#232042",
     marginTop: 8,
-    marginBottom: 8,
+    marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+    color: "grey",
+  },
+  blackSubtitle: {
+    fontSize: 16,
+    marginBottom: 12,
   },
   link: {
     fontSize: 16,
@@ -237,19 +241,49 @@ const styles = StyleSheet.create({
     backgroundColor: "#E2F1FB",
     borderRadius: 10,
     padding: 15,
+    marginTop: 15,
     marginBottom: 18,
   },
+  // input: {
+  //   borderWidth: 1,
+  //   borderColor: '#bbb',
+  //   borderRadius: 5,
+  //   paddingHorizontal: 12,
+  //   backgroundColor: 'transparent',
+  //   textAlignVertical: 'top',
+  //   height: 300,
+  //   fontSize: 16,
+  //   marginBottom: 18
+  // },
   input: {
-    borderWidth: 1,
-    borderColor: '#bbb',
-    borderRadius: 5,
-    paddingHorizontal: 12,
-    backgroundColor: 'transparent',
-    textAlignVertical: 'top',
-    height: 300,
-    fontSize: 16,
-    marginBottom: 18
-  },
+  borderWidth: 1.5,
+  borderColor: "#eee",
+  borderRadius: 16,            
+  paddingHorizontal: 18,
+  paddingTop: 22,
+  paddingBottom: 18,
+  backgroundColor: "#F7F8FA", 
+  textAlignVertical: "top",
+  minHeight: 100,
+  maxHeight: 220,
+  fontSize: 16,
+  color: "#232042",
+  marginBottom: 18,
+  elevation: 4,                  // for Android shadow
+  // Optional: Add a border glow on focus if using a custom wrapper
+  // borderColor: isFocused ? "#745ff2" : "#dad7f5",
+},
+  smallInput: {
+      height: 44,
+      borderRadius: 12,
+      borderWidth: 1.2,
+      borderColor: "#eee",
+      backgroundColor: "#F7F8FA",
+      paddingHorizontal: 16,
+      fontSize: 16,
+      marginBottom: 12,
+    },
+
   inputTransparent: {
     flex: 1,
     height: 40,
@@ -293,8 +327,8 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     backgroundColor: "#3D5CFF",
-    borderRadius: 8,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: "center",
     marginTop: 5,
     marginBottom: 18,
@@ -311,16 +345,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
   },
-  smallInput: {
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1.2,
-    borderColor: "#eee",
-    backgroundColor: "#F7F8FA",
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 12,
-  },
+  
   altText: {
     alignSelf: "center",
     color: "#888",
@@ -346,7 +371,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-  },
+  }
 }); 
 
 export default styles;
