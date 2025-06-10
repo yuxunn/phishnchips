@@ -216,8 +216,12 @@ export default function HomeScreen() {
             </ThemedView>
           </ScrollView>
         </View>
-
-        <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 8, marginLeft: horizontalPadding, fontSize: 18, fontWeight: '700' }}>Learning Progress</ThemedText>
+        
+        
+        <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 8, marginLeft: horizontalPadding, fontSize: 18, fontWeight: '700' }}>
+          Learning Progress
+          </ThemedText>
+          
         <ThemedView style={[styles.progressSection, { marginHorizontal: horizontalPadding, marginBottom: 18 }] }>
           {progress.map((item, idx) => (
             <View key={`${idx}-${item.label}`} style={styles.progressItemRow}>
