@@ -5,8 +5,7 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      // "@env": ["./node_modules/react-native-dotenv"]
+      ]
     }
   },
   "include": [
