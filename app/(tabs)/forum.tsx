@@ -1,7 +1,7 @@
 import { CreatePostForm } from '@/components/CreatePost';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useCallback} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -65,10 +65,24 @@ export default function ForumScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  const refreshPosts = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'posts'));
+      const postsFromFirestore = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(postsFromFirestore);
+    } catch (error) {
+      console.error('Error refreshing posts:', error);
+    }
+  };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts(); 
+    }, [])
+  );
   let isPosting = false;
 
   const handleCreatePost = async (postData: {
@@ -95,9 +109,9 @@ export default function ForumScreen() {
       timestamp: serverTimestamp(),
       title: postData.title,
       content: postData.content,
+      commentCount: 0, 
       stats: {
         likes: 0,
-        comments: 0,
       },
     };
   
@@ -200,50 +214,10 @@ const handleLike = async (postId: string) => {
                 <TouchableOpacity
                   style={styles.postCard}
                   onPress={() => router.push(`/post/${item.id}`)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={styles.avatar}>{item.user.avatar}</Text>
-                    <View style={{ marginLeft: 8, flex: 1 }}>
-                      <Text style={styles.postTitle}>{item.title}</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 2 }}>
-                        {item.user.tags?.map((tag: string, idx: number) => (
-                          <View
-                            key={idx}
-                            style={[styles.tag, tag === 'Verified by official sources' && styles.verifiedTag]}
-                          >
-                            <Text style={[styles.tagText, tag === 'Verified by official sources' && styles.verifiedTagText]}>
-                              {tag}
-                            </Text>
-                          </View>
-                        ))}
-
-                      </View>
-                    </View>
-                    <Text style={styles.time}>
-                      {item.timestamp?.toDate ?
-                        item.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
-                        'Just now'}
-                    </Text>
-                  </View>
-                  <Text style={styles.content}>{item.content}</Text>
-                  <View style={styles.statsRow}>
-                    <TouchableOpacity
-                      onPress={() => handleLike(item.id)}
-                      style={styles.likeButton}
-                    >
-                      <MaterialIcons
-                        name={likedPosts.has(item.id) ? 'thumb-up' : 'thumb-up-alt'}
-                        size={16}
-                        color={likedPosts.has(item.id) ? '#F6B940' : '#C7CAE6'}
-                      />
-                      <Text style={[styles.statsText, likedPosts.has(item.id) && styles.likedText]}>
-                        {item.stats.likes}
-                      </Text>
-                      <MaterialIcons name="chat-bubble-outline" size={16} color="#C7CAE6" style={{ marginLeft: 12 }} />
-                      <Text style={styles.statsText}>{item.stats.comments}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
+                  >
+                  <Text style={styles.postTitle}>{item.title}</Text>
+                  <Text style={styles.commentCount}>{item.commentCount || 0} Comments</Text>
+                  </TouchableOpacity>
               )}
             />
           )}
@@ -447,5 +421,10 @@ const styles = StyleSheet.create({
   },
   likedText: {
     color: '#F6B940',
+  },
+  commentCount: {
+    fontSize: 12,
+    color: '#63606C',
+    marginTop: 4,
   },
 });

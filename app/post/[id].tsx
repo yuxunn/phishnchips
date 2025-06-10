@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { View, Text, ActivityIndicator, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { db } from '@/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { arrayUnion, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { useAuth } from '../../auth-context'; 
 
 export default function PostDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, refreshPosts } = useLocalSearchParams(); 
+  const { user } = useAuth(); 
   const router = useRouter();
   type Post = {
     id: string;
     title: string;
     content: string;
     comments?: { id: string; user: { name: string }; content: string }[];
+    commentCount?: number;
   };
-  
+
+  const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState<{ id: string; user: { name: string }; content: string }[]>([]);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPost = async () => {
-      if (!id) return; // If no ID is provided, exit early
+      if (!id) return;
       try {
         const postRef = doc(db, 'posts', Array.isArray(id) ? id[0] : id);
         const postSnapshot = await getDoc(postRef);
@@ -27,6 +32,8 @@ export default function PostDetailsScreen() {
           const postData = postSnapshot.data();
           if (postData && 'title' in postData && 'content' in postData) {
             setPost({ id: postSnapshot.id, title: postData.title, content: postData.content, comments: postData.comments || [] });
+            setComments(postData.comments || []);
+
           } else {
             console.error('Post data is incomplete');
           }
@@ -43,6 +50,40 @@ export default function PostDetailsScreen() {
     fetchPost();
   }, [id]);
   
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return; 
+  
+    const comment = {
+      id: Date.now().toString(),
+      user: { name: user?.name || 'Anonymous User' },
+      content: newComment.trim(),
+    };
+  
+    try {
+      const postRef = doc(db, 'posts', Array.isArray(id) ? id[0] : id);
+  
+      await updateDoc(postRef, {
+        comments: arrayUnion(comment), 
+        commentCount: increment(1), 
+      });
+  
+      setComments((prev) => [...prev, comment]); 
+      setPost((prev) => prev ? {
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1, 
+      } : prev);
+  
+      setNewComment(''); 
+  
+      if (refreshPosts && typeof refreshPosts === 'function') {
+        (refreshPosts as () => void)();
+      }
+      
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
     if (loading) {
       return (
         <View style={styles.container}>
@@ -63,26 +104,51 @@ export default function PostDetailsScreen() {
     }
   
     return (
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{post.title}</Text>
-          <Text style={styles.content}>{post.content}</Text>
+<View style={styles.container}>
+  <View style={styles.card}>
+    <Text style={styles.title}>{post.title}</Text>
+    <Text style={styles.content}>{post.content}</Text>
+  </View>
+
+  <View style={styles.commentsSection}>
+  <Text style={styles.commentsTitle}>Comments</Text>
+  {comments.length > 0 ? (
+    <FlatList
+      data={comments}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View style={styles.commentCard}>
+          <Text style={styles.commentUser}>{item.user.name}</Text>
+          <Text style={styles.commentContent}>{item.content}</Text>
         </View>
-        <Text style={styles.commentsTitle}>Comments</Text>
-        <FlatList
-          data={post.comments || []}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.commentCard}>
-              <Text style={styles.commentUser}>{item.user.name}</Text>
-              <Text style={styles.commentContent}>{item.content}</Text>
-            </View>
-          )}
-        />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      )}
+    />
+  ) : (
+    <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+  )}
+</View>
+
+
+  <View style={styles.commentInputContainer}>
+    <TextInput
+      style={styles.commentInput}
+      placeholder="Add a comment..."
+      value={newComment}
+      onChangeText={setNewComment}
+    />
+    <TouchableOpacity
+      style={styles.commentButton}
+      onPress={handleAddComment}
+    >
+      <Text style={styles.commentButtonText}>Post</Text>
+    </TouchableOpacity>
+  </View>
+
+  {/* Back Button */}
+  <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+    <Text style={styles.backButtonText}>Go Back</Text>
+  </TouchableOpacity>
+</View>
     );
   }
   
@@ -113,6 +179,9 @@ export default function PostDetailsScreen() {
       fontSize: 16,
       color: '#232042',
       lineHeight: 22,
+    },
+    commentsSection: {
+      marginTop: 16,
     },
     commentsTitle: {
       fontSize: 18,
@@ -159,4 +228,48 @@ export default function PostDetailsScreen() {
       fontSize: 16,
       fontWeight: 'bold',
     },
+    noCommentsText: {
+      fontSize: 16,
+      color: '#B2B6C8',
+      textAlign: 'center',
+      marginVertical: 8,
+    },
+
+commentInputContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 16,
+  backgroundColor: '#fff',
+  borderRadius: 8,
+  padding: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 2,
+  elevation: 1,
+},
+commentInput: {
+  flex: 1,
+  height: 40,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#E6EDFF',
+  paddingHorizontal: 8,
+  fontSize: 16,
+  color: '#232042',
+},
+commentButton: {
+  backgroundColor: '#6A8DFF',
+  borderRadius: 8,
+  paddingVertical: 8,
+  paddingHorizontal: 16,
+  marginLeft: 8,
+},
+commentButtonText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
   });
+
+

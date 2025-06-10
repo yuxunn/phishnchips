@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+interface User {
+  name: string;
+}
+
 interface AuthContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
+  user: User | null;
+  setUser: (user: User | null) => void; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,12 +20,14 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedInState] = useState(false);
+  const [user, setUser] = useState<User | null>(null); 
 
   useEffect(() => {
     (async () => {
       const value = await AsyncStorage.getItem('isLoggedIn');
       if (value === 'true') {
         setIsLoggedInState(true);
+        setUser({ name: 'John Doe' });
       }
     })();
   }, []);
@@ -28,13 +36,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoggedInState(value);
     try {
       await AsyncStorage.setItem('isLoggedIn', value ? 'true' : 'false');
+      if (!value) {
+        setUser(null); 
+      }
     } catch {
       console.error('Failed to save login state');
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, user, setUser }}>
       {children}
     </AuthContext.Provider>
   );

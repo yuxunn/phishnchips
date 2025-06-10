@@ -24,6 +24,7 @@ export default function RootLayout() {
             <Stack initialRouteName="auth" screenOptions={{ headerShown: false }}>
               <Stack.Screen name="auth" />
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="post/[id]" />
               <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
             </Stack>
           </SafeAreaView>
