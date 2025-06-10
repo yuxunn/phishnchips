@@ -1,25 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    FlatList,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-
-type CreatePostFormProps = {
-  onClose: () => void;
-  onPost?: (post: {
-    title: string;
-    content: string;
-    tags: string[];
-    anonymous: boolean;
-  }) => void;
-};
+import { db } from '@/firebaseConfig';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 const AVAILABLE_TAGS = [
   'Seeking Advice',
@@ -32,7 +24,18 @@ const AVAILABLE_TAGS = [
   'Social Media Scam',
 ];
 
-export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
+type CreatePostFormProps = {
+  onClose: () => void;
+  onPost: (postData: {
+    title: string;
+    content: string;
+    tags: string[];
+    anonymous: boolean;
+  }) => Promise<void>;
+  currentUserName: string;
+};
+
+export const CreatePostForm: React.FC<CreatePostFormProps> = ({ onClose, onPost, currentUserName }) => {
   const [title, setTitle] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
@@ -56,104 +59,80 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
-    
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!content.trim()) {
-      newErrors.content = 'Content is required';
-    }
-    if (selectedTags.length === 0) {
-      newErrors.tags = 'Please select at least one tag';
-    }
-
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!content.trim()) newErrors.content = 'Content is required';
+    if (selectedTags.length === 0) newErrors.tags = 'Select at least one tag';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePost = () => {
-    if (!validateForm()) {
-      return;
-    }
+const handlePost = async () => {
+  if (!validateForm()) return;
 
-    onPost?.({
-      title,
-      content,
+  const postData = {
+    title,
+    content,
+    tags: selectedTags,
+    anonymous,
+    timestamp: serverTimestamp(),
+    user: {
+      name: anonymous ? 'Anonymous User' : currentUserName,
+      avatar: '🧑🏻',
       tags: selectedTags,
-      anonymous,
-    });
-    onClose();
+    },
+    stats: {
+      likes: 0,
+      comments: 0,
+    },
+    time: 'Just now',
   };
 
+  try {
+    await addDoc(collection(db, 'posts'), postData);
+    await onPost?.({ title, content, tags: selectedTags, anonymous });
+    onClose();
+  } catch (e) {
+    console.error('Error saving post to Firestore:', e);
+  }
+};
+
+
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 32 }}
-    >
-      <Text style={styles.heading}>Forum</Text>
-      <Text style={styles.subheading}>Create new post</Text>
+    <ScrollView style={{ padding: 16 }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Create Post</Text>
 
       <TextInput
-        style={[styles.input, errors.title && styles.inputError]}
         placeholder="Title"
         value={title}
         onChangeText={(text) => {
           setTitle(text);
-          if (errors.title) {
-            setErrors(prev => ({ ...prev, title: undefined }));
-          }
+          if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
         }}
-        placeholderTextColor="#B2B6C8"
+        style={{ borderBottomWidth: 1, marginBottom: 8 }}
       />
-      {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+      {errors.title && <Text style={{ color: 'red' }}>{errors.title}</Text>}
 
-      <Text style={styles.label}>Tags</Text>
-      <TouchableOpacity 
-        style={[styles.tagInput, errors.tags && styles.inputError]}
-        onPress={() => setShowTagDropdown(true)}
-      >
-        <Text style={styles.tagInputText}>Select tags</Text>
-        <MaterialIcons
-          name="arrow-drop-down"
-          size={24}
-          color="#B2B6C8"
-          style={styles.tagIcon}
-        />
+      <TouchableOpacity onPress={() => setShowTagDropdown(true)}>
+        <Text>Select tags</Text>
       </TouchableOpacity>
+      {selectedTags.map((tag) => (
+        <Text key={tag}>{tag}</Text>
+      ))}
+      {errors.tags && <Text style={{ color: 'red' }}>{errors.tags}</Text>}
 
-      <View style={styles.tagContainer}>
-        {selectedTags.map((tag) => (
-          <View key={tag} style={styles.tag}>
-            <Text style={styles.tagText}>{tag}</Text>
-            <TouchableOpacity onPress={() => removeTag(tag)}>
-              <MaterialIcons name="close" size={16} color="#B2B6C8" />
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
-      {errors.tags && <Text style={styles.errorTextTag}>{errors.tags}</Text>}
-
-      <Modal
-        visible={showTagDropdown}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowTagDropdown(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
+      <Modal visible={showTagDropdown} transparent animationType="fade">
+        <TouchableOpacity
+          style={{ flex: 1, justifyContent: 'center', backgroundColor: '#00000077' }}
           onPress={() => setShowTagDropdown(false)}
         >
-          <View style={styles.dropdownContainer}>
+          <View style={{ margin: 24, backgroundColor: '#fff', borderRadius: 6 }}>
             <FlatList
-              data={AVAILABLE_TAGS.filter(tag => !selectedTags.includes(tag))}
+              data={AVAILABLE_TAGS.filter((tag) => !selectedTags.includes(tag))}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => addTag(item)}
-                >
-                  <Text style={styles.dropdownItemText}>{item}</Text>
+                <TouchableOpacity onPress={() => addTag(item)} style={{ padding: 12 }}>
+                  <Text>{item}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -161,54 +140,29 @@ export function CreatePostForm({ onClose, onPost }: CreatePostFormProps) {
         </TouchableOpacity>
       </Modal>
 
-      <Text style={styles.label}>Content (max. 300 characters)</Text>
       <TextInput
-        style={[styles.textarea, errors.content && styles.inputError]}
         placeholder="Write your content..."
         value={content}
         onChangeText={(text) => {
           setContent(text);
-          if (errors.content) {
-            setErrors(prev => ({ ...prev, content: undefined }));
-          }
+          if (errors.content) setErrors((prev) => ({ ...prev, content: undefined }));
         }}
         multiline
-        numberOfLines={8}
-        placeholderTextColor="#B2B6C8"
+        numberOfLines={5}
+        style={{ borderWidth: 1, marginVertical: 8, padding: 8 }}
       />
-      {errors.content && <Text style={styles.errorText}>{errors.content}</Text>}
+      {errors.content && <Text style={{ color: 'red' }}>{errors.content}</Text>}
 
-      <View style={styles.anonymousBox}>
-        <TouchableOpacity
-          onPress={() => setAnonymous(!anonymous)}
-          style={styles.checkboxWrapper}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              anonymous && { backgroundColor: '#6A8DFF' },
-            ]}
-          >
-            {anonymous && (
-              <MaterialIcons name="check" size={16} color="#fff" />
-            )}
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.anonymousText}>
-          I wish to remain anonymous.{' '}
-          <Text style={styles.noteText}>
-            Do note that this might reduce post credibility. Users are
-            encouraged to display name for forum posts.
-          </Text>
-        </Text>
-      </View>
-
-      <TouchableOpacity style={styles.postButton} onPress={handlePost}>
-        <Text style={styles.postButtonText}>Post</Text>
+      <TouchableOpacity onPress={() => setAnonymous(!anonymous)} style={{ marginBottom: 16 }}>
+        <Text>{anonymous ? '✅ Anonymous' : '👤 Use my name'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-        <Text style={styles.cancelButtonText}>Cancel</Text>
+      <TouchableOpacity onPress={handlePost} style={{ backgroundColor: '#6A8DFF', padding: 12 }}>
+        <Text style={{ color: '#fff', textAlign: 'center' }}>Post</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onClose} style={{ marginTop: 12 }}>
+        <Text style={{ textAlign: 'center', color: '#B2B6C8' }}>Cancel</Text>
       </TouchableOpacity>
     </ScrollView>
   );
