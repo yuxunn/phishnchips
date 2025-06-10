@@ -5,26 +5,16 @@ import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { onAuthStateChanged } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, Pressable, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../../firebaseConfig';
+import { useAuth } from '../../auth-context';
 
 export default function HomeScreen() {
-  const [userName, setUserName] = useState<string>('');
   const [reportInput, setReportInput] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
+  const { user } = useAuth(); 
+  const userName = user?.displayName ?? user?.email ?? '';
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      if (user) {
-        setUserName(user.displayName ?? user.email ?? '');
-      } else {
-        setUserName('');
-      }
-    });
-    return unsubscribe;
-  }, []);
   const progress = [
     { label: 'Fake News and Misinformation', value: 4, total: 5 },
     { label: 'Safe Social Media Practices', value: 6, total: 24 },
@@ -62,19 +52,19 @@ export default function HomeScreen() {
     {
       date: '24 May',
       title: '👮 [SCAM ALERT] Police Impersonation',
-      description: "Caller claims to be police and asks for money to avoid arrest. Hang up! ��📞",
+      description: "Caller claims to be police and asks for money to avoid arrest. Hang up! 📞",
     },
   ];
 
   const router = useRouter();
   const handleSubmitReport = () => {
-    if (!reportInput.trim()) {
-      Alert.alert('Input Required', 'Please write what happened before submitting.');
-    } else {
-      Alert.alert('Report submitted', 'Thanks for your input!');
-      setReportInput(''); // Clear input after submission if needed
-    }
-  };
+      if (!reportInput.trim()) {
+        Alert.alert('Input Required', 'Please write what happened before submitting.');
+      } else {
+        Alert.alert('Report submitted', 'Thanks for your input!');
+        setReportInput(''); // Clear input after submission if needed
+      }
+    };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F7F8FA', marginBottom: 12}}>
@@ -101,7 +91,7 @@ export default function HomeScreen() {
 
         </View>
         <Image
-          source={{ uri: 'https://ui-avatars.com/api/?name=Lucas&background=6A8DFF&color=fff' }}
+          source={require('../../assets/male.png')}
           style={styles.avatar}
         />
       </LinearGradient>
@@ -111,7 +101,7 @@ export default function HomeScreen() {
         headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
         headerImage={<View />}
       >
-         {/* Saw a Scam Card - Overlapping the header */}
+        {/* Saw a Scam Card - Overlapping the header */}
         <View style={{ alignItems: 'center', marginTop: -overlap, marginBottom: 18, zIndex: 2 }}>
           <ThemedView style={[styles.scamCardRefactored, { width: screenWidth - horizontalPadding * 2 }]}>
             
@@ -179,6 +169,7 @@ export default function HomeScreen() {
         </View>
 
 
+
         <View style={[styles.alertRow, { paddingHorizontal: horizontalPadding, marginBottom: 18 }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {posts.map((post, idx) => (
@@ -238,8 +229,7 @@ export default function HomeScreen() {
           ))}
         </ThemedView>
 
-
-         <ThemedView style={[styles.shortcutsCard, { marginHorizontal: horizontalPadding, marginBottom: 32 }] }>
+        <ThemedView style={[styles.shortcutsCard, { marginHorizontal: horizontalPadding, marginBottom: 32 }] }>
           <ThemedText type="subtitle" style={{ marginBottom: 8, fontSize: 18, fontWeight: '700' }}>Shortcuts</ThemedText>
           <View style={styles.shortcutsRowAligned}>
             <View style={styles.shortcutIconWrapAligned}>

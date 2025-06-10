@@ -1,11 +1,10 @@
-import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
   const scheme = useColorScheme() ?? 'light';
@@ -102,6 +101,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="learn/lesson"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="account/edit"
         options={{
           href: null,
         }}
