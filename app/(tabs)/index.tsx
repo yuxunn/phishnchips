@@ -118,6 +118,7 @@ export default function HomeScreen() {
           </ThemedView>
         </View>
 
+
         <View style={[styles.alertRow, { paddingHorizontal: horizontalPadding, marginBottom: 18 }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {posts.map((post, idx) => (
@@ -150,6 +151,7 @@ export default function HomeScreen() {
               <Ionicons name="image" size={48} color="#b3d6f7" />
             </ThemedView>
           </ScrollView>
+
         </View>
 
         <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 8, marginLeft: horizontalPadding, fontSize: 18, fontWeight: '700' }}>Learning Progress</ThemedText>

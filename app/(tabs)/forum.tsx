@@ -1,4 +1,5 @@
-import { CreatePostForm } from '@/components/CreatePost';
+
+import { POSTS, Post } from '@/data/posts';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -11,51 +12,11 @@ const FILTERS = [
   { label: 'My posts', key: 'myposts' },
 ];
 
-const POSTS = [
-  {
-    id: '1',
-    user: { name: 'Robert Tan', avatar: '🧑🏻', tags: ['Phishing', 'CPFScam', 'Verified by official sources'] },
-    time: '04:32 pm',
-    timestamp: new Date('2024-03-20T16:32:00').getTime(),
-    title: '‼️ Fake CPF Refund SMS circulating again',
-    content: 'Received this message claiming CPF refund due to system update. Link looks fishy. (cpf-update[.]xyz). Be careful – official CPF will never text clickable links.',
-    stats: { likes: 120, comments: 10 },
-  },
-  {
-    id: '2',
-    user: { name: 'Janessa Ng', avatar: '👩🏻', tags: ['Ecommerce'] },
-    time: '04:31 pm',
-    timestamp: new Date('2024-03-20T16:31:00').getTime(),
-    title: 'Fake Carousell Seller Asking for bank OTP',
-    content: 'Almost got scammed. Seller ask me to "verify payment" by giving my OTP after clicking a link. Carousell CS confirmed its a scam method. Beware of seller ABC.',
-    stats: { likes: 89, comments: 7 },
-  },
-  {
-    id: '3',
-    user: { name: 'James Tan', avatar: '🧑🏻', tags: ['AskTheCommunity'] },
-    time: '04:31 pm',
-    timestamp: new Date('2024-03-20T16:31:00').getTime(),
-    title: 'How to verify if a QR code is safe to scan?',
-    content: 'Saw a poster with a QR code for "free gifts" at the MRT station. How can I check whether its safe before scanning?',
-    stats: { likes: 70, comments: 3 },
-  },
-  {
-    id: '4',
-    user: { name: 'Emily Lai', avatar: '👩🏻', tags: ['JobScam', 'Telegram'] },
-    time: '12:00 am',
-    timestamp: new Date('2024-03-20T00:00:00').getTime(),
-    title: 'Job Scam: Part time packing',
-    content: 'Congratulations, you have completed your registration! Let\'s start your learning journey next…',
-    stats: { likes: 70, comments: 5 },
-  },
-];
-
 const NOTIFICATIONS = [
   { id: '1', icon: 'thumb-up', message: 'sarah_xxtan liked your comment', time: 'Just now', color: '#FFD6E3' },
   { id: '2', icon: 'chat-bubble', message: 'sgwinnabe replied to your comment: "L..."', time: 'Just now', color: '#E6EDFF' },
   { id: '3', icon: 'chat-bubble', message: 'antiscamher0 replied to your commen...', time: 'Just now', color: '#E6EDFF' },
 ];
-
 
 export default function ForumScreen() {
   const insets = useSafeAreaInsets();
@@ -63,35 +24,12 @@ export default function ForumScreen() {
   const params = useLocalSearchParams();
   const [tab, setTab] = useState<'posts' | 'notifications'>('posts');
   const [selectedFilter, setSelectedFilter] = useState('latest');
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [posts, setPosts] = useState(POSTS);
+  const [posts, setPosts] = useState<Post[]>(POSTS);
   
   // Add current user state - in a real app, this would come from your auth system
   const [currentUser] = useState({ name: 'Robert Tan' });
 
-  const handleCreatePost = (postData: {
-    title: string;
-    content: string;
-    tags: string[];
-    anonymous: boolean;
-  }) => {
-    const newPost = {
-      id: String(posts.length + 1),
-      user: {
-        name: postData.anonymous ? 'Anonymous User' : currentUser.name,
-        avatar: '🧑🏻',
-        tags: postData.tags,
-      },
-      time: 'Just now',
-      timestamp: Date.now(),
-      title: postData.title,
-      content: postData.content,
-      stats: { likes: 0, comments: 0 },
-    };
-
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-  };
 
   React.useEffect(() => {
     if (
@@ -141,7 +79,7 @@ export default function ForumScreen() {
       const newLikedPosts = new Set(prev);
       if (newLikedPosts.has(postId)) {
         newLikedPosts.delete(postId);
-        setPosts(prevPosts => 
+        setPosts((prevPosts: Post[]) => 
           prevPosts.map(post => 
             post.id === postId 
               ? { ...post, stats: { ...post.stats, likes: post.stats.likes - 1 } }
@@ -150,7 +88,7 @@ export default function ForumScreen() {
         );
       } else {
         newLikedPosts.add(postId);
-        setPosts(prevPosts => 
+        setPosts((prevPosts: Post[]) => 
           prevPosts.map(post => 
             post.id === postId 
               ? { ...post, stats: { ...post.stats, likes: post.stats.likes + 1 } }
@@ -162,9 +100,6 @@ export default function ForumScreen() {
     });
   };
 
-  if (showCreateForm) {
-    return <CreatePostForm onClose={() => setShowCreateForm(false)} onPost={handleCreatePost} />;
-  }
 
   return (
     <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>  
@@ -201,7 +136,7 @@ export default function ForumScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.plusBtn}
-                onPress={() => setShowCreateForm(true)}
+                onPress={() => router.push('/post/createpost')}
               >
                 <MaterialIcons name="add" size={22} color="#232042" />
               </TouchableOpacity>
