@@ -66,36 +66,33 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ onClose, onPost,
     return Object.keys(newErrors).length === 0;
   };
 
-const handlePost = async () => {
-  if (!validateForm()) return;
+  let isPosting = false;
 
-  const postData = {
-    title,
-    content,
-    tags: selectedTags,
-    anonymous,
-    timestamp: serverTimestamp(),
-    user: {
-      name: anonymous ? 'Anonymous User' : currentUserName,
-      avatar: '🧑🏻',
-      tags: selectedTags,
-    },
-    stats: {
-      likes: 0,
-      comments: 0,
-    },
-    time: 'Just now',
+  const handlePost = async () => {
+    if (isPosting) {
+      console.log('handlePost skipped because it is already posting.');
+      return; // Prevent duplicate calls
+    }
+    isPosting = true;
+  
+    console.log('handlePost started');
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      isPosting = false;
+      return;
+    }
+  
+    try {
+      await onPost?.({ title, content, tags: selectedTags, anonymous });
+      console.log('onPost callback executed');
+      onClose(); // Close the form after posting
+    } catch (e) {
+      console.error('Error saving post:', e);
+    } finally {
+      isPosting = false; // Reset flag
+      console.log('handlePost finished');
+    }
   };
-
-  try {
-    await addDoc(collection(db, 'posts'), postData);
-    await onPost?.({ title, content, tags: selectedTags, anonymous });
-    onClose();
-  } catch (e) {
-    console.error('Error saving post to Firestore:', e);
-  }
-};
-
 
 
   return (

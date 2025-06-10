@@ -69,36 +69,49 @@ export default function ForumScreen() {
     fetchPosts();
   }, []);
 
-const handleCreatePost = async (postData: {
-  title: string;
-  content: string;
-  tags: string[];
-  anonymous: boolean;
-}) => {
-  const newPost = {
-    user: {
-      name: postData.anonymous ? 'Anonymous User' : currentUser.name,
-      avatar: '🧑🏻',
-      tags: postData.tags,
-    },
-    time: 'Just now',
-    timestamp: serverTimestamp(),
-    title: postData.title,
-    content: postData.content,
-    stats: {
-      likes: 0,
-      comments: 0,
-    },
+  let isPosting = false;
+
+  const handleCreatePost = async (postData: {
+    title: string;
+    content: string;
+    tags: string[];
+    anonymous: boolean;
+  }) => {
+    if (isPosting) {
+      console.log('handleCreatePost skipped because it is already posting.');
+      return; // Prevent duplicate calls
+    }
+    isPosting = true;
+  
+    console.log('handleCreatePost started:', postData);
+  
+    const newPost = {
+      user: {
+        name: postData.anonymous ? 'Anonymous User' : currentUser.name,
+        avatar: '🧑🏻',
+        tags: postData.tags,
+      },
+      time: 'Just now',
+      timestamp: serverTimestamp(),
+      title: postData.title,
+      content: postData.content,
+      stats: {
+        likes: 0,
+        comments: 0,
+      },
+    };
+  
+    try {
+      await addDoc(collection(db, 'posts'), newPost);
+      console.log('Post successfully created:', newPost);
+      fetchPosts(); // Refresh posts
+    } catch (e) {
+      console.error('Error saving post to Firestore:', e);
+    } finally {
+      isPosting = false; // Reset flag
+      console.log('handleCreatePost finished.');
+    }
   };
-
-  try {
-    await addDoc(collection(db, 'posts'), newPost);
-    fetchPosts();
-  } catch (e) {
-    console.error('Error saving post to Firestore:', e);
-  }
-};
-
 const handleLike = async (postId: string) => {
   const isLiked = likedPosts.has(postId); 
 
@@ -135,19 +148,19 @@ const handleLike = async (postId: string) => {
     return filtered;
   }, [posts, selectedFilter, currentUser.name]);
 
-if (showCreateForm) {
-  return (
-    <CreatePostForm
-      onClose={() => setShowCreateForm(false)}
-      onPost={handleCreatePost}
-      currentUserName={currentUser.name}
-    />
-  );
-}
+  if (showCreateForm) {
+    return (
+      <CreatePostForm
+        onClose={() => setShowCreateForm(false)}
+        onPost={handleCreatePost}
+        currentUserName={currentUser.name}
+      />
+    );
+  }
 
 
   return (
-    <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>  
+    <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>
       <Text style={styles.title}>Forum</Text>
       <View style={styles.tabRow}>
         <TouchableOpacity onPress={() => setTab('posts')} style={styles.tabBtn}>
@@ -193,16 +206,16 @@ if (showCreateForm) {
                     <View style={{ marginLeft: 8, flex: 1 }}>
                       <Text style={styles.postTitle}>{item.title}</Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 2 }}>
-{item.user.tags?.map((tag: string, idx: number) => (
-  <View
-    key={idx}
-    style={[styles.tag, tag === 'Verified by official sources' && styles.verifiedTag]}
-  >
-    <Text style={[styles.tagText, tag === 'Verified by official sources' && styles.verifiedTagText]}>
-      {tag}
-    </Text>
-  </View>
-))}
+                        {item.user.tags?.map((tag: string, idx: number) => (
+                          <View
+                            key={idx}
+                            style={[styles.tag, tag === 'Verified by official sources' && styles.verifiedTag]}
+                          >
+                            <Text style={[styles.tagText, tag === 'Verified by official sources' && styles.verifiedTagText]}>
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
 
                       </View>
                     </View>
@@ -242,7 +255,7 @@ if (showCreateForm) {
           data={NOTIFICATIONS}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <View style={[styles.notificationCard, { backgroundColor: item.color }]}> 
+            <View style={[styles.notificationCard, { backgroundColor: item.color }]}>
               <MaterialIcons name={item.icon as any} size={24} color="#6A8DFF" style={{ marginRight: 12 }} />
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={1} ellipsizeMode="tail" style={styles.notificationText}>{item.message}</Text>

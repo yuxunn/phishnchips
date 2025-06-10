@@ -14,6 +14,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedInState] = useState(false);
+
   useEffect(() => {
     (async () => {
       const value = await AsyncStorage.getItem('isLoggedIn');
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await AsyncStorage.setItem('isLoggedIn', value ? 'true' : 'false');
     } catch {
+      console.error('Failed to save login state');
     }
   };
 
