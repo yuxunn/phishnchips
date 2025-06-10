@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LessonPartScreen() {
   const { lessonId, partId } = useLocalSearchParams();
@@ -13,6 +14,7 @@ export default function LessonPartScreen() {
   const router = useRouter();
   const [completed, setCompleted] = useState(() => isPartCompleted(lessonId as string, partId as string));
   const scrollViewRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     // Reset completed state when part changes
@@ -45,11 +47,16 @@ export default function LessonPartScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView
+     <ScrollView
         style={styles.scrollView}
         ref={scrollViewRef}
+        contentContainerStyle={{
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 12
+       }}
       >
+    <View style={styles.container}>
+     
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerBackButton}>
@@ -80,7 +87,7 @@ export default function LessonPartScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
+      
 
       {/* Navigation buttons */}
       <View style={styles.navigationRow}>
@@ -110,7 +117,10 @@ export default function LessonPartScreen() {
           <MaterialIcons name="arrow-forward" size={24} color="#232042" />
         </TouchableOpacity>
       </View>
+      
     </View>
+    </ScrollView>
+    
   );
 }
 
@@ -138,7 +148,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     margin: 8,
     paddingBottom: 40,

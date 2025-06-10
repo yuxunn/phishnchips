@@ -5,6 +5,7 @@ import { getSavedLessons } from '@/data/savedLessons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LearnScreen() {
     const [search, setSearch] = useState('');
@@ -12,6 +13,7 @@ export default function LearnScreen() {
     const [savedLessons, setSavedLessons] = useState<{[id: string]: boolean}>({});
     const [filteredLessons, setFilteredLessons] = useState<Lesson[]>(lessonsData);
     const router = useRouter();
+    const insets = useSafeAreaInsets();
 
     // Load saved lessons on mount
     useEffect(() => {
@@ -55,7 +57,10 @@ export default function LearnScreen() {
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <ScrollView style={styles.container} contentContainerStyle={{
+    paddingBottom: insets.bottom + 24,
+    paddingHorizontal: 20,
+    }}>
             {/* Title */}
             <ThemedText style={styles.title}>Learn</ThemedText>
 
@@ -145,6 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 16,
+    marginTop: 24,
   },
   searchBar: {
     flexDirection: 'row',

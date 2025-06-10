@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LessonDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -14,6 +15,7 @@ export default function LessonDetailScreen() {
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const [progress, setProgress] = useState(() => getProgress(id as string));
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // Load saved state on mount
   useEffect(() => {
@@ -55,8 +57,13 @@ export default function LessonDetailScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <ScrollView style={styles.container} contentContainerStyle={{
+          paddingBottom: insets.bottom + 32,
+          paddingHorizontal: 12
+          }}>
+    
+      <View>
         {/* Header with image and title */}
         <View style={styles.header}>
           <View style={styles.headerBackButton}>
@@ -119,7 +126,7 @@ export default function LessonDetailScreen() {
             );
           })}
         </View>
-      </ScrollView>
+      
 
       {/* Save and Start buttons - Fixed at bottom */}
       <View style={styles.saveStartRow}>
@@ -130,7 +137,11 @@ export default function LessonDetailScreen() {
           <ThemedText style={styles.startButtonText}>Start</ThemedText>
         </TouchableOpacity>
       </View>
+      
     </View>
+    </ScrollView>
+    </View>
+    
   );
 }
 
@@ -172,11 +183,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     margin: 8,
     paddingBottom: 40,
-    width: '60%'
+    width: '60%',
+    marginTop: 10,
+    zIndex: 10, 
   },
   headerImage: {
     width: 180,

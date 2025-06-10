@@ -7,11 +7,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, Platform, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Image, Linking, Modal, Platform, Pressable, ScrollView, StatusBar, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState<string>('');
+  const [reportInput, setReportInput] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -65,6 +67,14 @@ export default function HomeScreen() {
   ];
 
   const router = useRouter();
+  const handleSubmitReport = () => {
+    if (!reportInput.trim()) {
+      Alert.alert('Input Required', 'Please write what happened before submitting.');
+    } else {
+      Alert.alert('Report submitted', 'Thanks for your input!');
+      setReportInput(''); // Clear input after submission if needed
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F7F8FA', marginBottom: 12}}>
@@ -101,22 +111,71 @@ export default function HomeScreen() {
         headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
         headerImage={<View />}
       >
-        {/* Saw a Scam Card - Overlapping the header */}
-        <View style={{ alignItems: 'center', marginBottom: 18, zIndex: 2 }}>
+         {/* Saw a Scam Card - Overlapping the header */}
+        <View style={{ alignItems: 'center', marginTop: -overlap, marginBottom: 18, zIndex: 2 }}>
           <ThemedView style={[styles.scamCardRefactored, { width: screenWidth - horizontalPadding * 2 }]}>
-            <ThemedText type="subtitle" style={{ marginBottom: 2, fontSize: 18, fontWeight: '700' }}>Saw a Scam?</ThemedText>
+            
+            <ThemedText type="subtitle" style={{ marginBottom: 2, fontSize: 18, fontWeight: '700' }}>
+              <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <Ionicons name="information-circle-outline" size={18} color="#3D5CFF" marginRight={8}/>
+            </TouchableOpacity>
+              Saw a Scam?</ThemedText>
             <ThemedText style={{ color: '#888', marginBottom: 8, fontSize: 15 }}>
               Protect your loved ones and report potential scams.
             </ThemedText>
+            
             <View style={styles.inputWrapper}>
               <Ionicons name="pencil" size={20} color="#bbb" style={{ marginLeft: 8 }} />
               <TextInput
                 placeholder="Write what happened..."
                 placeholderTextColor="#bbb"
                 style={styles.inputTransparent}
+                onChangeText={setReportInput}
+                value={reportInput}
               />
+               <TouchableOpacity onPress={handleSubmitReport}>
+                <Ionicons name="send" size={16} color="#3D5CFF" marginRight={8} />
+              </TouchableOpacity>
             </View>
           </ThemedView>
+           {/* Modal Popup */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}
+          onPress={() => setModalVisible(false)}
+        >
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 10,
+              padding: 20,
+              maxWidth: '80%',
+              elevation: 5,
+            }}
+          >
+            <ThemedText style={{ fontSize: 16, color: '#333' }}>
+              Navigate to report tab to submit upload with upload related screenshot/attachment to the report.
+            </ThemedText>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{ marginTop: 15, alignSelf: 'flex-end' }}
+            >
+              <ThemedText style={{ color: '#3D5CFF', fontWeight: '600' }}>Close</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
         </View>
 
 
@@ -179,20 +238,24 @@ export default function HomeScreen() {
           ))}
         </ThemedView>
 
-        <ThemedView style={[styles.shortcutsCard, { marginHorizontal: horizontalPadding, marginBottom: 32 }] }>
+
+         <ThemedView style={[styles.shortcutsCard, { marginHorizontal: horizontalPadding, marginBottom: 32 }] }>
           <ThemedText type="subtitle" style={{ marginBottom: 8, fontSize: 18, fontWeight: '700' }}>Shortcuts</ThemedText>
           <View style={styles.shortcutsRowAligned}>
             <View style={styles.shortcutIconWrapAligned}>
-              <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/SGSecure_logo.png' }} style={styles.shortcutIconAligned} />
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.sgsecure.sg/')}>
+                <Image source={require('../../assets/images/sgsecure-logo.jpg')} style={styles.shortcutIconAligned} />
+              </TouchableOpacity>
               <ThemedText style={styles.shortcutLabel}>SGSecure</ThemedText>
             </View>
+
             <View style={styles.shortcutIconWrapAligned}>
-              <Ionicons name="shield" size={48} color="#6A8DFF" style={styles.shortcutIconAligned} />
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.scamshield.org.sg/')}>
+                <Image source={require('../../assets/images/scamshield-logo.png')} style={styles.shortcutIconAligned} />
+              </TouchableOpacity>
               <ThemedText style={styles.shortcutLabel}>ScamShield</ThemedText>
             </View>
-            <View style={styles.shortcutIconWrapAligned}>
-              <Ionicons name="people" size={48} color="#6A8DFF" style={styles.shortcutIconAligned} />
-            </View>
+            
           </View>
         </ThemedView>
       </ParallaxScrollView>

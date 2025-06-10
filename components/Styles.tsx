@@ -371,6 +371,64 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "85%",
+    backgroundColor: "#fff",
+    padding: 20,
+    elevation: 5,
+  },
+  singleModalContent: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 20,
+    elevation: 5,
+  },
+  rowCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+  },
+  warningText: {
+    color: "#F36C5E",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  safeText: {
+    color: "#4FE87C",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  stepsText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "bold",
+    lineHeight: 25,
+    marginTop: 8,
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: "#3D5CFF",
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  messageModal: {
+    alignItems: "center", 
+    justifyContent: "center", 
+    marginVertical: 10, 
+    marginHorizontal: 10, 
+    gap: 8 
   }
 }); 
 
