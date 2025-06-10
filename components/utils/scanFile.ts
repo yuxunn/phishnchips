@@ -1,7 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert } from "react-native";
 
-const apiKey = "67b3d885b053d0a7bffa4f0a995c97b6d3faf9aea5c3630deeeffcd15d647a85"
+const apiKey = "directly put the api key here, do not use env file, it is not working in expo";
 
 export async function scanFile(file: DocumentPicker.DocumentPickerAsset, setDetectedScamMsg: (msg: string) => void, setIsDetectedScamMsg: (value: boolean) => void, setIsLoading: (isLoading: boolean) => void) {
   try {

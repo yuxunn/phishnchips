@@ -1,6 +1,6 @@
 // import { EMAIL_CHECKER_API_KEY } from "@env";
 import { Alert } from "react-native";
-const apiKey = "8bea02a59261640fe8b254f5d6616db581886c6443696225289ce155f245"
+const apiKey = "directly put the api key here, do not use env file, it is not working in expo";
 
 
 export async function scanEmail(email: string, setDetectedScamMsg: (msg: string) => void, setIsDetectedScamMsg: (value: boolean) => void, setIsLoading: (isLoading: boolean) => void) {
