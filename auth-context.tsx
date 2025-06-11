@@ -1,21 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { auth } from './firebaseConfig';
 
-type AuthContextType = {
+interface User {
+  name: string;
+}
+
+interface AuthContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
   user: User | null;
-  setUser: (user: User | null) => void;
-};
+  setUser: (user: User | null) => void; 
+}
 
-const AuthContext = createContext<AuthContextType>({
-  isLoggedIn: false,
-  setIsLoggedIn: () => {},
-  user: null,
-  setUser: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -23,24 +20,14 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedInState] = useState(false);
-  const [user, setUserState] = useState<User | null>(null);
-
-  useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUserState(user);
-      setIsLoggedInState(!!user);
-    });
-
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
+  const [user, setUser] = useState<User | null>(null); 
 
   useEffect(() => {
     (async () => {
       const value = await AsyncStorage.getItem('isLoggedIn');
       if (value === 'true') {
         setIsLoggedInState(true);
+        setUser({ name: 'John Doe' });
       }
     })();
   }, []);
@@ -49,12 +36,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoggedInState(value);
     try {
       await AsyncStorage.setItem('isLoggedIn', value ? 'true' : 'false');
+      if (!value) {
+        setUser(null); 
+      }
     } catch {
+      console.error('Failed to save login state');
     }
-  };
-
-  const setUser = (user: User | null) => {
-    setUserState(user);
   };
 
   return (
@@ -64,4 +51,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
