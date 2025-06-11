@@ -19,18 +19,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <PaperProvider theme={navigationTheme}>
-       <AuthProvider>                           
+        <AuthProvider>
           <SafeAreaView style={{ flex: 1 }}>
-            <Stack
-              initialRouteName="auth"
-              screenOptions={{ headerShown: false }}
-            >
-              <Stack.Screen name="auth"/>
-              <Stack.Screen name="(tabs)"/>
+            <Stack initialRouteName="auth" screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="auth" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="post/[id]" />
               <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
             </Stack>
           </SafeAreaView>
-      </AuthProvider>
+        </AuthProvider>
       </PaperProvider>
     </ThemeProvider>
   );

@@ -1,9 +1,28 @@
 import { CreatePostForm } from '@/components/CreatePost';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import React, { useEffect, useState , useCallback} from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { db } from '@/firebaseConfig';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  updateDoc,
+  increment,
+} from 'firebase/firestore';
 
 const FILTERS = [
   { label: 'Latest', key: 'latest' },
@@ -11,51 +30,11 @@ const FILTERS = [
   { label: 'My posts', key: 'myposts' },
 ];
 
-const POSTS = [
-  {
-    id: '1',
-    user: { name: 'Robert Tan', avatar: '🧑🏻', tags: ['Phishing', 'CPFScam', 'Verified by official sources'] },
-    time: '04:32 pm',
-    timestamp: new Date('2024-03-20T16:32:00').getTime(),
-    title: '‼️ Fake CPF Refund SMS circulating again',
-    content: 'Received this message claiming CPF refund due to system update. Link looks fishy. (cpf-update[.]xyz). Be careful – official CPF will never text clickable links.',
-    stats: { likes: 120, comments: 10 },
-  },
-  {
-    id: '2',
-    user: { name: 'Janessa Ng', avatar: '👩🏻', tags: ['Ecommerce'] },
-    time: '04:31 pm',
-    timestamp: new Date('2024-03-20T16:31:00').getTime(),
-    title: 'Fake Carousell Seller Asking for bank OTP',
-    content: 'Almost got scammed. Seller ask me to "verify payment" by giving my OTP after clicking a link. Carousell CS confirmed its a scam method. Beware of seller ABC.',
-    stats: { likes: 89, comments: 7 },
-  },
-  {
-    id: '3',
-    user: { name: 'James Tan', avatar: '🧑🏻', tags: ['AskTheCommunity'] },
-    time: '04:31 pm',
-    timestamp: new Date('2024-03-20T16:31:00').getTime(),
-    title: 'How to verify if a QR code is safe to scan?',
-    content: 'Saw a poster with a QR code for "free gifts" at the MRT station. How can I check whether its safe before scanning?',
-    stats: { likes: 70, comments: 3 },
-  },
-  {
-    id: '4',
-    user: { name: 'Emily Lai', avatar: '👩🏻', tags: ['JobScam', 'Telegram'] },
-    time: '12:00 am',
-    timestamp: new Date('2024-03-20T00:00:00').getTime(),
-    title: 'Job Scam: Part time packing',
-    content: 'Congratulations, you have completed your registration! Let\'s start your learning journey next…',
-    stats: { likes: 70, comments: 5 },
-  },
-];
-
 const NOTIFICATIONS = [
   { id: '1', icon: 'thumb-up', message: 'sarah_xxtan liked your comment', time: 'Just now', color: '#FFD6E3' },
   { id: '2', icon: 'chat-bubble', message: 'sgwinnabe replied to your comment: "L..."', time: 'Just now', color: '#E6EDFF' },
   { id: '3', icon: 'chat-bubble', message: 'antiscamher0 replied to your commen...', time: 'Just now', color: '#E6EDFF' },
 ];
-
 
 export default function ForumScreen() {
   const insets = useSafeAreaInsets();
@@ -65,109 +44,137 @@ export default function ForumScreen() {
   const [selectedFilter, setSelectedFilter] = useState('latest');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [posts, setPosts] = useState(POSTS);
-  
-  // Add current user state - in a real app, this would come from your auth system
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentUser] = useState({ name: 'Robert Tan' });
 
-  const handleCreatePost = (postData: {
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+      const postsFromFirestore = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(postsFromFirestore);
+    } catch (e) {
+      console.error('Failed to fetch posts:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshPosts = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'posts'));
+      const postsFromFirestore = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(postsFromFirestore);
+    } catch (error) {
+      console.error('Error refreshing posts:', error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts(); 
+    }, [])
+  );
+  let isPosting = false;
+
+  const handleCreatePost = async (postData: {
     title: string;
     content: string;
     tags: string[];
     anonymous: boolean;
   }) => {
+    if (isPosting) {
+      console.log('handleCreatePost skipped because it is already posting.');
+      return; // Prevent duplicate calls
+    }
+    isPosting = true;
+  
+    console.log('handleCreatePost started:', postData);
+  
     const newPost = {
-      id: String(posts.length + 1),
       user: {
         name: postData.anonymous ? 'Anonymous User' : currentUser.name,
         avatar: '🧑🏻',
         tags: postData.tags,
       },
       time: 'Just now',
-      timestamp: Date.now(),
+      timestamp: serverTimestamp(),
       title: postData.title,
       content: postData.content,
-      stats: { likes: 0, comments: 0 },
+      commentCount: 0, 
+      stats: {
+        likes: 0,
+      },
     };
-
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-  };
-
-  React.useEffect(() => {
-    if (
-      params.newPostTitle &&
-      params.newPostContent &&
-      params.newPostTags &&
-      !posts.some(
-        (p) =>
-          p.title === params.newPostTitle &&
-          p.content === params.newPostContent
-      )
-    ) {
-      handleCreatePost({
-        title: params.newPostTitle as string,
-        content: params.newPostContent as string,
-        tags: JSON.parse(params.newPostTags as string),
-        anonymous: false,
-      });
-      setSelectedFilter('verified');
+  
+    try {
+      await addDoc(collection(db, 'posts'), newPost);
+      console.log('Post successfully created:', newPost);
+      fetchPosts(); // Refresh posts
+    } catch (e) {
+      console.error('Error saving post to Firestore:', e);
+    } finally {
+      isPosting = false; // Reset flag
+      console.log('handleCreatePost finished.');
     }
-  }, [params]);
+  };
+const handleLike = async (postId: string) => {
+  const isLiked = likedPosts.has(postId); 
+
+  setLikedPosts(prev => {
+    const newLikedPosts = new Set(prev);
+    if (isLiked) newLikedPosts.delete(postId);
+    else newLikedPosts.add(postId);
+    return newLikedPosts;
+  });
+
+  try {
+    await updateDoc(doc(db, 'posts', postId), {
+      'stats.likes': increment(isLiked ? -1 : 1), 
+    });
+    fetchPosts();
+  } catch (e) {
+    console.error('Error updating likes:', e);
+  }
+};
+
 
   const filteredAndSortedPosts = React.useMemo(() => {
     let filtered = [...posts];
-    
+
     if (selectedFilter === 'verified') {
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.user.tags.includes('Verified by official sources')
       );
     }
-    
     if (selectedFilter === 'myposts') {
-      filtered = filtered.filter(post => 
-        post.user.name === currentUser.name
-      );
+      filtered = filtered.filter(post => post.user.name === currentUser.name);
     }
-    
-    if (selectedFilter === 'latest') {
-      filtered.sort((a, b) => b.timestamp - a.timestamp);
-    }
-    
+
     return filtered;
   }, [posts, selectedFilter, currentUser.name]);
 
-  const handleLike = (postId: string) => {
-    setLikedPosts(prev => {
-      const newLikedPosts = new Set(prev);
-      if (newLikedPosts.has(postId)) {
-        newLikedPosts.delete(postId);
-        setPosts(prevPosts => 
-          prevPosts.map(post => 
-            post.id === postId 
-              ? { ...post, stats: { ...post.stats, likes: post.stats.likes - 1 } }
-              : post
-          )
-        );
-      } else {
-        newLikedPosts.add(postId);
-        setPosts(prevPosts => 
-          prevPosts.map(post => 
-            post.id === postId 
-              ? { ...post, stats: { ...post.stats, likes: post.stats.likes + 1 } }
-              : post
-          )
-        );
-      }
-      return newLikedPosts;
-    });
-  };
-
   if (showCreateForm) {
-    return <CreatePostForm onClose={() => setShowCreateForm(false)} onPost={handleCreatePost} />;
+    return (
+      <CreatePostForm
+        onClose={() => setShowCreateForm(false)}
+        onPost={handleCreatePost}
+        currentUserName={currentUser.name}
+      />
+    );
   }
 
+
   return (
-    <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>  
+    <View style={[styles.container, { paddingTop: 32, paddingHorizontal: 16 }]}>
       <Text style={styles.title}>Forum</Text>
       <View style={styles.tabRow}>
         <TouchableOpacity onPress={() => setTab('posts')} style={styles.tabBtn}>
@@ -176,14 +183,14 @@ export default function ForumScreen() {
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setTab('notifications')} style={styles.tabBtn}>
           <Text style={[styles.tabText, tab === 'notifications' && styles.tabTextActive]}>Notifications</Text>
-          <View style={styles.dot} />
           {tab === 'notifications' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
       </View>
+
       {tab === 'posts' && (
         <>
           <View style={styles.filterRow}>
-            {FILTERS.slice(0, 2).map((f) => (
+            {FILTERS.map(f => (
               <TouchableOpacity
                 key={f.key}
                 style={[styles.filterChip, selectedFilter === f.key && styles.filterChipActive]}
@@ -192,87 +199,40 @@ export default function ForumScreen() {
                 <Text style={[styles.filterChipText, selectedFilter === f.key && styles.filterChipTextActive]}>{f.label}</Text>
               </TouchableOpacity>
             ))}
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity
-                style={[styles.filterChip, selectedFilter === 'myposts' && styles.filterChipActive]}
-                onPress={() => setSelectedFilter('myposts')}
-              >
-                <Text style={[styles.filterChipText, selectedFilter === 'myposts' && styles.filterChipTextActive]}>My posts</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.plusBtn}
-                onPress={() => setShowCreateForm(true)}
-              >
-                <MaterialIcons name="add" size={22} color="#232042" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.plusBtn} onPress={() => setShowCreateForm(true)}>
+              <MaterialIcons name="add" size={22} color="#232042" />
+            </TouchableOpacity>
           </View>
-          <FlatList
-            data={filteredAndSortedPosts}
-            keyExtractor={item => item.id}
-            style={{ marginTop: 8 }}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                style={styles.postCard}
-                onPress={() => router.push(`/post/${item.id}`)}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                  <Text style={styles.avatar}>{item.user.avatar}</Text>
-                  <View style={{ marginLeft: 8, flex: 1 }}>
-                    <Text style={styles.postTitle}>{item.title}</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 2 }}>
-                      {item.user.tags.map((tag, idx) => (
-                        <View key={tag} style={[styles.tag, tag === 'Verified by official sources' && styles.verifiedTag]}>
-                          <Text style={[styles.tagText, tag === 'Verified by official sources' && styles.verifiedTagText]}>{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                  <Text style={styles.time}>{item.time}</Text>
-                </View>
-                <Text style={styles.content}>{item.content}</Text>
-                <View style={styles.statsRow}>
-                  <TouchableOpacity 
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleLike(item.id);
-                    }} 
-                    style={styles.likeButton}
+
+          {loading ? (
+            <ActivityIndicator />
+          ) : (
+            <FlatList
+              data={filteredAndSortedPosts}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.postCard}
+                  onPress={() => router.push(`/post/${item.id}`)}
                   >
-                    <MaterialIcons 
-                      name={likedPosts.has(item.id) ? "thumb-up" : "thumb-up-alt"} 
-                      size={16} 
-                      color={likedPosts.has(item.id) ? "#F6B940" : "#C7CAE6"} 
-                    />
-                    <Text style={[styles.statsText, likedPosts.has(item.id) && styles.likedText]}>
-                      {item.stats.likes}
-                    </Text>
-                    <MaterialIcons name="chat-bubble-outline" size={16} color="#C7CAE6" style={{ marginLeft: 12 }} />
-                    <Text style={styles.statsText}>{item.stats.comments}</Text>
+                  <Text style={styles.postTitle}>{item.title}</Text>
+                  <Text style={styles.commentCount}>{item.commentCount || 0} Comments</Text>
                   </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
+              )}
+            />
+          )}
         </>
       )}
+
       {tab === 'notifications' && (
         <FlatList
           data={NOTIFICATIONS}
           keyExtractor={item => item.id}
-          style={{ marginTop: 16 }}
           renderItem={({ item }) => (
-            <View style={[styles.notificationCard, { backgroundColor: item.color }]}> 
+            <View style={[styles.notificationCard, { backgroundColor: item.color }]}>
               <MaterialIcons name={item.icon as any} size={24} color="#6A8DFF" style={{ marginRight: 12 }} />
               <View style={{ flex: 1 }}>
-                <Text 
-                  style={styles.notificationText}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {item.message}
-                </Text>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.notificationText}>{item.message}</Text>
                 <Text style={styles.notificationTime}>{item.time}</Text>
               </View>
             </View>
@@ -282,6 +242,7 @@ export default function ForumScreen() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -460,5 +421,10 @@ const styles = StyleSheet.create({
   },
   likedText: {
     color: '#F6B940',
+  },
+  commentCount: {
+    fontSize: 12,
+    color: '#63606C',
+    marginTop: 4,
   },
 });
